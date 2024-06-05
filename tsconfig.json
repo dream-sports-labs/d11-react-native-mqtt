@@ -1,0 +1,25 @@
+{
+  "compilerOptions": {
+    "target": "ES6",
+    "module": "CommonJS",
+    "declaration": true, // This will generate .d.ts files
+    "outDir": "./dist", // Output directory for compiled files
+    "strict": true, // Enable strict mode
+    "jsx": "react-native",
+    "esModuleInterop": true,
+    "noImplicitReturns": true,
+    "noImplicitUseStrict": false,
+    "noStrictGenericChecks": false,
+    "noUncheckedIndexedAccess": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "resolveJsonModule": true,
+    "forceConsistentCasingInFileNames": true,
+    "skipLibCheck": true,
+    "paths": {
+      "d11-mqtt": ["./src/index"]
+    }
+  },
+  "include": ["src/**/*.ts", "src/**/*.tsx"], // Files to include in compilation
+  "exclude": ["node_modules", "dist", "src/**/__tests__"] // Files to exclude
+}
