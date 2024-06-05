@@ -1,0 +1,10 @@
+{
+  "compilerOptions": {
+    "target": "ES6",
+    "module": "CommonJS",
+    "strict": true, // Enable strict mode
+    "jsx": "react-native"
+  },
+  "include": ["src/**/*.ts", "src/**/*.tsx"], // Files to include in compilation
+  "exclude": ["node_modules"] // Files to exclude
+}
