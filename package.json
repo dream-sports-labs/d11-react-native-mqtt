@@ -1,6 +1,6 @@
 {
   "name": "@dream11/react-native-mqtt",
-  "version": "0.0.35",
+  "version": "0.0.11",
   "description": "React native support for using mqtt",
   "module": "dist/Modules/mqtt-modules.js",
   "main": "dist/index.js",
@@ -39,13 +39,13 @@
     "ios",
     "android"
   ],
-  "repository": "https://github.com/dream11/d11-mqtt",
+  "repository": "https://github.com/dream11/d11-react-native-mqtt",
   "author": "Vibhor Verma <vibhor.verma@dream11.com> (https://github.com/vibhor-d11)",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/dream11/d11-mqtt/issues"
+    "url": "https://github.com/dream11/d11-react-native-mqtt/issues"
   },
-  "homepage": "https://github.com/dream11/d11-mqtt#readme",
+  "homepage": "https://github.com/dream11/d11-react-native-mqtt#readme",
   "publishConfig": {
     "registry": "https://npm.pkg.github.com"
   },
@@ -98,23 +98,6 @@
     "extends": [
       "@commitlint/config-conventional"
     ]
-  },
-  "release-it": {
-    "git": {
-      "commitMessage": "chore: release ${version}",
-      "tagName": "v${version}"
-    },
-    "npm": {
-      "publish": true
-    },
-    "github": {
-      "release": true
-    },
-    "plugins": {
-      "@release-it/conventional-changelog": {
-        "preset": "angular"
-      }
-    }
   },
   "eslintConfig": {
     "root": true,
