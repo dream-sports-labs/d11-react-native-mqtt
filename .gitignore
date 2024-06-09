@@ -68,3 +68,6 @@ android/keystores/debug.keystore
 # Turborepo
 .turbo/
 
+# test coverage
+coverage/
+

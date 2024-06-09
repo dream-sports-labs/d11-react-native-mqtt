@@ -11,7 +11,7 @@ import type {
 } from './MqttClient.interface';
 import { EventEmitter } from './EventEmitter';
 import { getMqttBackoffTime } from './MqttClient.utils';
-import { MqttJSIModule } from '../Modules/mqtt-module';
+import { MqttJSIModule } from '../Modules/mqttModule';
 
 /**
  * MqttClient class represents an MQTT client with functionalities for connection management, event handling, and message subscription.
@@ -126,7 +126,6 @@ export class MqttClient {
     if (this.connectionStatus !== CONNECTION_STATE.CONNECTING) {
       return;
     }
-
     /**
      * Function call to initiate a connection to the MQTT broker using the native module.
      * It provides connection parameters such as client ID, keep-alive interval, username, password, and clean session flag.
@@ -147,27 +146,42 @@ export class MqttClient {
     });
 
     clearTimeout(this.retryTimer);
-    if (
-      this.options?.retryCount &&
-      this.currentRetryCount < this.options?.retryCount
-    ) {
-      this.retryTimer = setTimeout(async () => {
-        this.currentRetryCount++;
-        const connectionStatus = this.getConnectionStatus();
-        if (connectionStatus !== CONNECTION_STATE.CONNECTED) {
-          const newOptions = await this.onReconnectIntercepter?.(
-            this.mqtt5DisconnectReasonCode
-          );
-          console.log(
-            `::MQTT Client: Current connection status is ${connectionStatus} so reconnecting with exponential backoff. Retry count: ${this.currentRetryCount} with previous disconnection reasonCode: ${this.mqtt5DisconnectReasonCode}, where max allowed reties: ${this.options?.retryCount}`
-          );
-          this.resetOptions(newOptions);
-          this.connection();
-        }
-      }, getMqttBackoffTime(this.options.backoffTime, this.currentRetryCount ?? 1, this.options.maxBackoffTime, this.options.jitter));
+
+    const checkRetryConnection =
+      this?.options?.autoReconnect &&
+      this.currentRetryCount < (this.options?.retryCount || 0);
+
+    if (checkRetryConnection) {
+      this.handleReConnection();
     }
   }
 
+  /**
+   * Handles the reconnection logic for MQTT connections.
+   * It uses a timeout to delay the reconnection attempt by the calculated backoff time.
+   * During the reconnection attempt, it allows interception and modification of the connection options
+   * Finally, it attempts to reconnect using the potentially modified options like auth token etc.
+   */
+  private async handleReConnection() {
+    this.currentRetryCount++;
+    const isConnected =
+      this.getConnectionStatus() === CONNECTION_STATE.CONNECTED;
+    const backoffTime = getMqttBackoffTime(
+      this.options?.backoffTime,
+      this.currentRetryCount ?? 1,
+      this.options?.maxBackoffTime,
+      this.options?.jitter
+    );
+    this.retryTimer = setTimeout(async () => {
+      if (!isConnected) {
+        const newOptions = await this.onReconnectIntercepter?.(
+          this.mqtt5DisconnectReasonCode
+        );
+        this.resetOptions(newOptions);
+        this.connection();
+      }
+    }, backoffTime);
+  }
   /**
    * Method to set a callback for disconnect event interception.
    * @param callback Callback function to handle disconnect events.
