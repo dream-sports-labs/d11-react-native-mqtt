@@ -1,8 +1,10 @@
-# d11-mqtt
+# d11-react-native-mqtt
 
-Message Queuing Telemetry Transport (MQTT) protocol. MQTT is a lightweight, efficient, and reliable messaging protocol designed for low-bandwidth, high-latency, or unreliable networks.
+Message Queuing Telemetry Transport (MQTT) is a lightweight, efficient, and reliable messaging protocol designed for low-bandwidth, high-latency, or unreliable networks.
 
 MQTT operates on a publish/subscribe pattern, facilitating the decoupling of message senders (publishers) from message receivers (subscribers). This is achieved through the utilization of a central component known as a message broker, which orchestrates communication between publishers and subscribers.
+
+This package provides MQTT functionality for React Native applications.
 
 Internally, this package leverages [HiveMQTT](https://github.com/hivemq/hivemq-mqtt-client/tree/master?tab=readme-ov-file) for Android and [CocoaMQTT](https://github.com/emqx/CocoaMQTT) for iOS, ensuring seamless integration and optimal performance across both platforms.
 
@@ -32,10 +34,22 @@ Internally, this package leverages [HiveMQTT](https://github.com/hivemq/hivemq-m
   - When connected
   - When disconnected or connection failed
 
+
+## Minimum Supported Version
+
+This project requires the following minimum versions to function properly:
+- **Java**: JDK 8 or higher
+- **iOS**: iOS 12.0 or higher
+- **Android**: API level 24 (Android 7.0) or higher
+
 ## Installation
 
 ```sh
+using NPM
 npm install @dream11/react-native-mqtt
+
+using Yarn
+yarn add @dream11/react-native-mqtt
 ```
 
 ### General configuration
@@ -193,7 +207,7 @@ const styles = StyleSheet.create({
 });
 ```
 
-## Methods exposed
+## API Support
 
 - `createMqttClient`: A function that returns an instance of MqttClient with the given input config.
 
@@ -282,7 +296,7 @@ client.setOnConnectFailureCallback(onConnectFailureCallback)
 - `getConnectionStatus`: Gets the current connection status.
 
 ```tsx
-getConnectionStatus: () => 'connected' | connecting | 'disconnected'
+getConnectionStatus: () => string
 const status = client.getConnectionStatus();
 ```
 
@@ -337,16 +351,14 @@ client.remove();
 ## Running example app
 
 ```sh
-cd example
-
 # install all packages
 yarn
 
 # for android
-yarn android
+yarn example android
 
 # for ios
-yarn ios
+yarn example ios
 ```
 
 ## Contributing
