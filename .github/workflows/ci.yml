@@ -110,6 +110,7 @@ jobs:
         uses: actions/checkout@v3
 
       - name: Install cocoapods-pod-linkage
+        if: env.turbo_cache_hit != 1 && steps.cocoapods-cache.outputs.cache-hit != 'true'
         run: |
           gem install cocoapods-pod-linkage
         env:
@@ -146,6 +147,7 @@ jobs:
             ${{ runner.os }}-cocoapods-
         
       - name: Install cocoapods
+        if: env.turbo_cache_hit != 1 && steps.cocoapods-cache.outputs.cache-hit != 'true'
         run: |
           yarn pod-install example/ios
         env:
