@@ -177,6 +177,9 @@ export class MqttClient {
         const newOptions = await this.onReconnectIntercepter?.(
           this.mqtt5DisconnectReasonCode
         );
+        console.log(
+          `::MQTT Client: Current connection status is ${isConnected} so reconnecting with exponential backoff. Retry count: ${this.currentRetryCount} with previous disconnection reasonCode: ${this.mqtt5DisconnectReasonCode}, where max allowed reties: ${this.options?.retryCount}`
+        );
         this.resetOptions(newOptions);
         this.connection();
       }
