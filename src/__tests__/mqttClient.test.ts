@@ -176,6 +176,17 @@ describe('MqttClient', () => {
       const callback = client.onDisconnectInterceptor(mockCallback);
       expect(callback.remove).toBeDefined();
     });
+    it('should execute catch block for disconnect event interception', () => {
+      expect(() => {
+        client.onDisconnectInterceptor();
+      }).toThrow();
+    });
+
+    it('should not try to connect if connection is not equal to connecting', () => {
+      client.connectionStatus = CONNECTION_STATE.CONNECTED;
+      const result = client.connection();
+      expect(result).toBe(undefined);
+    });
 
     it('should handle connection failure event', () => {
       client.disconnect();
