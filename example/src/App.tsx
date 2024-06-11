@@ -2,8 +2,6 @@ import * as React from 'react';
 import { StyleSheet, View } from 'react-native';
 import { createMqtt } from './create-mqtt';
 import type { MqttClient } from '../../src/Mqtt/MqttClient';
-// import { useMqttSubscription } from './subscribe-mqtt';
-// import { MQTT_EVENTS, MqttEventsInterface, MqttQos } from '../../src/Mqtt';
 import { RoundButton } from './Button';
 
 export default function App() {
@@ -35,28 +33,6 @@ export default function App() {
     setClient(newClient);
     console.log(`::MQTT Create Mqtt`);
   };
-
-  /**
-   * Use this hook to subscribe to a topic.
-   * This hook subscribes to a topic when client is created and connects if not connected
-
-  const onSuccessSubscription = (
-    ack: MqttEventsInterface[MQTT_EVENTS.SUBSCRIPTION_SUCCESS_EVENT]
-  ) => {
-    console.log(`::MQTT Subscribed acknowledgement`, ack);
-  };
-
-  useMqttSubscription({
-    isEnabled: !!client,
-    qos: MqttQos.AT_LEAST_ONCE,
-    topic: 'sample_topic',
-    onData: (data: unknown) => {
-      console.log(`::MQTT Subscribed Data ${data}`);
-    },
-    client: client,
-    onSuccessSubscription: onSuccessSubscription,
-  });
-  */
 
   return (
     <View style={styles.container}>

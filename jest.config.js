@@ -13,11 +13,5 @@ module.exports = {
     '!src/**/*.constants.{ts}',
     '!src/**/*.interface.{ts}',
   ],
-  coveragePathIgnorePatterns: [
-    'node_modules',
-    'src/.*/*..(js|d.ts)',
-    'src/.*/*..constants.ts',
-    'src/.*/*..interface.ts',
-  ],
   coverageReporters: ['lcov', ['text', { skipFull: true }]],
 };

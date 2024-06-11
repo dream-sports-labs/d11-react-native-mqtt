@@ -3,6 +3,18 @@ import { MqttJSIModule } from '../Modules/mqttModule';
 import { EventEmitter } from '../Mqtt/EventEmitter';
 import { CONNECTION_STATE } from '../Mqtt/MqttClient.constants';
 
+const clientConfig = {
+  autoReconnect: false,
+  keepAlive: 60,
+  username: '',
+  password: '',
+  cleanSession: true,
+  retryCount: 0,
+  backoffTime: 100,
+  maxBackoffTime: 100,
+  jitter: 1,
+};
+
 jest.mock('../Mqtt/EventEmitter', () => {
   const remove = jest.fn();
   const mEventEmitter = {
@@ -20,18 +32,6 @@ jest.mock('../Mqtt/EventEmitter', () => {
 jest.mock('../Mqtt/MqttClient.utils', () => ({
   getMqttBackoffTime: jest.fn().mockReturnValue(1000),
 }));
-
-const clientConfig = {
-  autoReconnect: false,
-  keepAlive: 60,
-  username: '',
-  password: '',
-  cleanSession: true,
-  retryCount: 0,
-  backoffTime: 100,
-  maxBackoffTime: 100,
-  jitter: 1,
-};
 
 describe('MqttClient', () => {
   const clientId = 'test-client';
