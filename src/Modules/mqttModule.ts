@@ -35,9 +35,7 @@ export interface MqttModuleProxy {
 
   unsubscribeMqtt: (eventId: string, clientId: string, topic: string) => void;
 
-  getConnectionStatusMqtt: (
-    clientId: string
-  ) => 'connected' | 'connecting' | 'disconnected';
+  getConnectionStatusMqtt: (clientId: string) => string;
 }
 
 declare global {
@@ -55,11 +53,7 @@ if (!isLoaded()) {
     installJSIModule: () => boolean;
   };
   const isSuccessful = mqttModule.installJSIModule();
-  if (!isSuccessful) {
-    console.warn('::MQTT : JSI bindings installation failed for MqttModule');
-  } else {
-    console.log('::MQTT : JSI bindings installation successful for MqttModule');
-  }
+  console.log('::MQTT : JSI bindings installation status', isSuccessful);
 }
 
 export const MqttJSIModule = global.__MqttModuleProxy;

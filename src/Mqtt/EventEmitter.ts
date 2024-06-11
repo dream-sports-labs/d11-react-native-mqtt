@@ -1,5 +1,5 @@
 import { NativeEventEmitter } from 'react-native';
-import { MqttModule } from '../Modules/mqtt-module';
+import { MqttModule } from '../Modules/mqttModule';
 
 /**
  * This function encapsulates the creation and management of a singleton event emitter instance.

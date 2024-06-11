@@ -32,7 +32,8 @@
     "lint": "eslint \"**/*.{js,ts,tsx}\"",
     "clean": "del-cli android/build example/android/build example/android/app/build example/ios/build dist",
     "release": "release-it",
-    "build": "tsc"
+    "build": "tsc",
+    "pretest": "node scripts/helpers/generate-mocks"
   },
   "keywords": [
     "react-native",
@@ -86,13 +87,6 @@
   "packageManager": "yarn@3.6.1",
   "engines": {
     "node": ">= 16.0.0"
-  },
-  "jest": {
-    "preset": "react-native",
-    "modulePathIgnorePatterns": [
-      "<rootDir>/example/node_modules",
-      "<rootDir>/dist/"
-    ]
   },
   "commitlint": {
     "extends": [
