@@ -17,9 +17,11 @@ class MqttHelper {
     private var subscriptionMap = [String: [String: Subscription]]()
     
     private let CONNECTED_EVENT = "connected"
+    private let CLIENT_INITIALIZE_EVENT = "client_initialize"
     private let DISCONNECTED_EVENT = "disconnected"
     private let SUBSCRIBE_SUCCESS = "subscribe_success"
     private let SUBSCRIBE_FAILED = "subscribe_failed"
+    private let ERROR_EVENT = "mqtt_error"
 
     private let CONNECTED = "connected"
     private let CONNECTING = "connecting"
@@ -28,57 +30,79 @@ class MqttHelper {
     init(_ clientId: String, host: String, port: Int, enableSslConfig: Bool, emitJsiEvent: @escaping (_ event: String, _ params: [String : Any]?) -> Void) {
         self.emitJsiEvent = emitJsiEvent
         self.clientId = clientId
-        mqtt = CocoaMQTT5(clientID: clientId, host: host, port: UInt16(port))
-        mqtt.delegate = self
-        mqtt.enableSSL = enableSslConfig
-        print("enable ssl ",enableSslConfig)
+        do {
+            mqtt = CocoaMQTT5(clientID: clientId, host: host, port: UInt16(port))
+            mqtt.delegate = self
+            mqtt.enableSSL = enableSslConfig
+            print("enable ssl ", enableSslConfig)
+            print("mqtt_in_ios", mqtt)
+            emitJsiEvent(clientId + CLIENT_INITIALIZE_EVENT, ["clientInit": true])
+        } catch {
+            emitJsiEvent(clientId + ERROR_EVENT, ["clientInit": true, "errorMessage": error.localizedDescription])
+        }
     }
 
     func connectMqtt(_ clientId: String, options: MqttHelperOptions) {
-        let connectProperties = MqttConnectProperties()
-        connectProperties.topicAliasMaximum = 0
-        connectProperties.sessionExpiryInterval = 0
-        connectProperties.receiveMaximum = 100
-        connectProperties.maximumPacketSize = 500
-        mqtt.connectProperties = connectProperties
+        do {
+            let connectProperties = MqttConnectProperties()
+            connectProperties.topicAliasMaximum = 0
+            connectProperties.sessionExpiryInterval = 0
+            connectProperties.receiveMaximum = 100
+            connectProperties.maximumPacketSize = 500
+            mqtt.connectProperties = connectProperties
 
-        mqtt.username = options.username
-        mqtt.password = options.password
-        mqtt.keepAlive = options.keepAlive
-        mqtt.cleanSession = options.cleanSession
+            mqtt.username = options.username
+            mqtt.password = options.password
+            mqtt.keepAlive = options.keepAlive
+            mqtt.cleanSession = options.cleanSession
 
-        _ = mqtt.connect()
+            _ = mqtt.connect()
+        } catch {
+            emitJsiEvent(clientId + ERROR_EVENT, ["clientConnected": false, "errorMessage": error.localizedDescription])
+        }
     }
 
     func disconnectMqtt() {
-        mqtt.disconnect()
+        do {
+            mqtt.disconnect()
+        } catch {
+            emitJsiEvent(clientId + ERROR_EVENT, ["clientDisconnected": false, "errorMessage": error.localizedDescription])
+        }
     }
 
     func subscribeMqtt(_ eventId: String, clientId: String, topic: String, qos: Int) {
-        let subscription = Subscription(qos: qos)
-        if subscriptionMap[topic] != nil {
-            subscriptionMap[topic]?[eventId] = subscription
-        } else {
-            subscriptionMap[topic] = [eventId:subscription]
-        }
-        if mqtt.connState == .connected {
-            if let qosEnum = CocoaMQTTQoS(rawValue: UInt8(qos)) {
-                mqtt.subscribe(topic, qos: qosEnum)
+        do {
+            let subscription = Subscription(qos: qos)
+            if subscriptionMap[topic] != nil {
+                subscriptionMap[topic]?[eventId] = subscription
             } else {
-                mqtt.subscribe(topic, qos: .qos0)
+                subscriptionMap[topic] = [eventId:subscription]
             }
+            if mqtt.connState == .connected {
+                if let qosEnum = CocoaMQTTQoS(rawValue: UInt8(qos)) {
+                    mqtt.subscribe(topic, qos: qosEnum)
+                } else {
+                    mqtt.subscribe(topic, qos: .qos0)                
+                }
+            }
+        } catch {
+            emitJsiEvent(clientId + ERROR_EVENT, ["clientSubscribed": false, "errorMessage": error.localizedDescription])
         }
     }
 
     func unsubscribeMqtt(_ eventId: String, clientId: String, topic: String) {
-        if subscriptionMap[topic] == nil {
-            return
-        }
-        if let length = subscriptionMap[topic]?.count, length > 1 {
-            subscriptionMap[topic]?.removeValue(forKey: eventId)
-        } else {
-            mqtt.unsubscribe(topic)
-            subscriptionMap.removeValue(forKey: topic)
+        do {
+            if subscriptionMap[topic] == nil {
+                return
+            }
+            if let length = subscriptionMap[topic]?.count, length > 1 {
+                subscriptionMap[topic]?.removeValue(forKey: eventId)
+            } else {
+                mqtt.unsubscribe(topic)
+                subscriptionMap.removeValue(forKey: topic)
+            }
+        } catch {
+            emitJsiEvent(clientId + ERROR_EVENT, ["clientUnsubscribed": false, "errorMessage": error.localizedDescription])
         }
     }
 

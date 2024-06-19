@@ -19,14 +19,16 @@ class MqttHelper(
     enableSslConfig: Boolean,
     private val emitJsiEvent: (eventId: String, payload: WritableMap) -> Unit
 ) {
-    private val mqtt: Mqtt5RxClient
+    private lateinit var mqtt: Mqtt5RxClient
     private val subscriptionMap: HashMap<String, HashMap<String, Subscription>> = HashMap()
 
     companion object {
+        const val CLIENT_INITIALIZE_EVENT = "client_initialize"
         const val CONNECTED_EVENT = "connected"
         const val DISCONNECTED_EVENT = "disconnected"
         const val SUBSCRIBE_SUCCESS = "subscribe_success"
         const val SUBSCRIBE_FAILED = "subscribe_failed"
+        const val ERROR_EVENT = "mqtt_error"
 
         const val CONNECTED = "connected"
         const val CONNECTING = "connecting"
@@ -34,43 +36,59 @@ class MqttHelper(
     }
 
     init {
-      Log.d("MQTT init", "clientid " + clientId + "host "+ host + "port "+ port)
-        val client = Mqtt5Client.builder()
-            .identifier(clientId)
-            .addDisconnectedListener { disconnectedContext ->
-                val connPayload = try {
-                    (disconnectedContext.cause as Mqtt5ConnAckException?)?.mqttMessage?.reasonCode?.code
-                } catch (e: Exception) {
-                    null
-                }
+        Log.d("MQTT init", "clientid " + clientId + "host "+ host + "port "+ port)
+        try {
+            val client = Mqtt5Client.builder()
+                .identifier(clientId)
+                .addDisconnectedListener { disconnectedContext ->
+                    val connPayload = try {
+                        (disconnectedContext.cause as Mqtt5ConnAckException?)?.mqttMessage?.reasonCode?.code
+                    } catch (e: Exception) {
+                        null
+                    }
 
-                val disconnectPayload = try {
-                    (disconnectedContext.cause as Mqtt5DisconnectException).mqttMessage.reasonCode.code
-                } catch (e: Exception) {
-                    null
+                    val disconnectPayload = try {
+                        (disconnectedContext.cause as Mqtt5DisconnectException).mqttMessage.reasonCode.code
+                    } catch (e: Exception) {
+                        null
+                    }
+                    val params = Arguments.createMap().apply {
+                        putInt("reasonCode", connPayload ?: disconnectPayload ?: -1)
+                    }
+                    emitJsiEvent(clientId + DISCONNECTED_EVENT, params)
                 }
-                val params = Arguments.createMap().apply {
-                    putInt("reasonCode", connPayload ?: disconnectPayload ?: -1)
+                .addConnectedListener {
+                    val params = Arguments.createMap().apply {
+                        putInt("reasonCode", 0)
+                    }
+                    emitJsiEvent(clientId + CONNECTED_EVENT, params)
                 }
-                emitJsiEvent(clientId + DISCONNECTED_EVENT, params)
-            }
-            .addConnectedListener {
-                val params = Arguments.createMap().apply {
-                    putInt("reasonCode", 0)
-                }
-                emitJsiEvent(clientId + CONNECTED_EVENT, params)
-            }
-            .serverHost(host)
-            .serverPort(port)
+                .serverHost(host)
+                .serverPort(port)
 
-      mqtt = if(enableSslConfig) {
-        client
-          .sslWithDefaultConfig()
-          .buildRx()
-      } else {
-        client
-          .buildRx()
-      }
+          mqtt = if(enableSslConfig) {
+            client
+              .sslWithDefaultConfig()
+              .buildRx()
+          } else {
+            client
+              .buildRx()
+          }
+
+          if (this::mqtt.isInitialized) {
+            val params = Arguments.createMap().apply {
+              putBoolean("clientInit", true)
+            }
+            emitJsiEvent(clientId + CLIENT_INITIALIZE_EVENT, params)
+          }
+        } catch (e: Exception) {
+            Log.e("MQTT init", "Initialization failed: ${e.message}")
+            val params = Arguments.createMap().apply {
+              putBoolean("clientInit", false)
+              putString("errorMessage", e.message.toString())
+            }
+            emitJsiEvent(clientId + ERROR_EVENT, params)
+        }
     }
 
     fun connect(options: MqttConnectOptions) {
@@ -94,6 +112,12 @@ class MqttHelper(
             }
             .doOnError { error ->
                 Log.e("MQTT Connect", "" + error.message + ":" + error.cause)
+                val params = Arguments.createMap().apply {
+                  putBoolean("clientConnected", false)
+                  putString("errorMessage", error.message.toString())
+                  putString("errorCause", error.cause.toString())
+                }
+                emitJsiEvent(clientId + ERROR_EVENT, params)
             }
             .subscribe( {},
               { throwable ->
@@ -116,6 +140,8 @@ class MqttHelper(
                  * Will be triggered when disconnection failed. Ideally this can happen when connection is already disconnected.
                  */
                 val params = Arguments.createMap().apply {
+                    putBoolean("clientDisconnected", false)
+                    putString("errorMessage", error.message.toString())
                     putInt("reasonCode", -1)
                 }
                 emitJsiEvent(clientId + DISCONNECTED_EVENT, params)
@@ -153,8 +179,8 @@ class MqttHelper(
             }
             .doOnError { error ->
                 Log.e("MQTT Subscribe", "" + error.message) // TODO: Replace with LogWrapper when available on bridge
-
                 val params = Arguments.createMap().apply {
+                    putBoolean("clientSubscribed", false)
                     putString("errorMessage", error.message.toString())
                 }
                 emitJsiEvent(eventId + SUBSCRIBE_FAILED, params)
@@ -192,6 +218,11 @@ class MqttHelper(
                 .doOnError { error ->
                     // TODO: Replace with LogWrapper when available on bridge
                     Log.e("MQTT Unsubscribe", "" + error.message)
+                    val params = Arguments.createMap().apply {
+                      putBoolean("clientUnsubscribed", false)
+                      putString("errorMessage", error.message.toString())
+                    }
+                    emitJsiEvent(clientId + ERROR_EVENT, params)
                 }
                 .subscribe( {},
                   { throwable ->

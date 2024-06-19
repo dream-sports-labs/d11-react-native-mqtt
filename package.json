@@ -20,10 +20,7 @@
     "!android/gradlew",
     "!android/gradlew.bat",
     "!android/local.properties",
-    "!**/__tests__",
-    "!**/__fixtures__",
-    "!**/__mocks__",
-    "!**/.*"
+    "!src/__tests__"
   ],
   "scripts": {
     "example": "yarn workspace d11-mqtt-example",

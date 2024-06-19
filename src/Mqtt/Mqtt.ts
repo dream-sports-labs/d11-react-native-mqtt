@@ -8,11 +8,10 @@ import type { MqttConfig } from './MqttClient.interface';
  * @returns A new instance of MqttClient configured with the provided settings.
  */
 
-export const createMqttClient = (config: MqttConfig): MqttClient => {
-  return new MqttClient(
-    config.clientId,
-    config.host,
-    config.port,
-    config.options
-  );
-};
+export async function createMqttClient(
+  config: MqttConfig
+): Promise<MqttClient | undefined> {
+  const { clientId, host, port, options } = config;
+  const mqttClient = await MqttClient.create(clientId, host, port, options);
+  return mqttClient ?? undefined;
+}

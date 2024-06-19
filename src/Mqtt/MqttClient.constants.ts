@@ -10,6 +10,8 @@ export enum MQTT_EVENTS {
   SUBSCRIPTION_EVENT = 'subscription_event', // Do not use this as eventName. This is intended only for typing purpose
   SUBSCRIPTION_SUCCESS_EVENT = 'subscribe_success',
   SUBSCRIPTION_FAILED_EVENT = 'subscribe_failed',
+  CLIENT_INITIALIZE_EVENT = 'client_initialize',
+  ERROR_EVENT = "mqtt_error"
 }
 
 // This is not exclusive yet. Add all reasonCodes if you have patience
