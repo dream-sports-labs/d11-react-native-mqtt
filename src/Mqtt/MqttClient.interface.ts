@@ -75,12 +75,12 @@ export type SubscribeMqtt = {
   onError?: (
     error: MqttEventsInterface[MQTT_EVENTS.SUBSCRIPTION_FAILED_EVENT]
   ) => void;
-}
+};
 
 export type DisconnectCallback = {
-  mqtt5ReasonCode: Mqtt5ReasonCode,
+  mqtt5ReasonCode: Mqtt5ReasonCode;
   options: MqttConnect & {
     disconnectType: 'forceDisconnected' | 'autoDisconnected';
     retryCount: number;
-  }
-}
+  };
+};

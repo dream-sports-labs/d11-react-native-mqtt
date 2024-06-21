@@ -34,8 +34,6 @@ class MqttHelper {
             mqtt = CocoaMQTT5(clientID: clientId, host: host, port: UInt16(port))
             mqtt.delegate = self
             mqtt.enableSSL = enableSslConfig
-            print("enable ssl ", enableSslConfig)
-            print("mqtt_in_ios", mqtt)
             emitJsiEvent(clientId + CLIENT_INITIALIZE_EVENT, ["clientInit": true])
         } catch {
             emitJsiEvent(clientId + ERROR_EVENT, ["clientInit": true, "errorMessage": error.localizedDescription])
@@ -43,66 +41,50 @@ class MqttHelper {
     }
 
     func connectMqtt(_ clientId: String, options: MqttHelperOptions) {
-        do {
-            let connectProperties = MqttConnectProperties()
-            connectProperties.topicAliasMaximum = 0
-            connectProperties.sessionExpiryInterval = 0
-            connectProperties.receiveMaximum = 100
-            connectProperties.maximumPacketSize = 500
-            mqtt.connectProperties = connectProperties
+        let connectProperties = MqttConnectProperties()
+        connectProperties.topicAliasMaximum = 0
+        connectProperties.sessionExpiryInterval = 0
+        connectProperties.receiveMaximum = 100
+        connectProperties.maximumPacketSize = 500
+        mqtt.connectProperties = connectProperties
 
-            mqtt.username = options.username
-            mqtt.password = options.password
-            mqtt.keepAlive = options.keepAlive
-            mqtt.cleanSession = options.cleanSession
+        mqtt.username = options.username
+        mqtt.password = options.password
+        mqtt.keepAlive = options.keepAlive
+        mqtt.cleanSession = options.cleanSession
 
-            _ = mqtt.connect()
-        } catch {
-            emitJsiEvent(clientId + ERROR_EVENT, ["clientConnected": false, "errorMessage": error.localizedDescription])
-        }
+        _ = mqtt.connect()
     }
 
     func disconnectMqtt() {
-        do {
-            mqtt.disconnect()
-        } catch {
-            emitJsiEvent(clientId + ERROR_EVENT, ["clientDisconnected": false, "errorMessage": error.localizedDescription])
-        }
+        mqtt.disconnect()
     }
 
     func subscribeMqtt(_ eventId: String, clientId: String, topic: String, qos: Int) {
-        do {
-            let subscription = Subscription(qos: qos)
-            if subscriptionMap[topic] != nil {
-                subscriptionMap[topic]?[eventId] = subscription
+        let subscription = Subscription(qos: qos)
+        if subscriptionMap[topic] != nil {
+            subscriptionMap[topic]?[eventId] = subscription
+        } else {
+            subscriptionMap[topic] = [eventId:subscription]
+        }
+        if mqtt.connState == .connected {
+            if let qosEnum = CocoaMQTTQoS(rawValue: UInt8(qos)) {
+                mqtt.subscribe(topic, qos: qosEnum)
             } else {
-                subscriptionMap[topic] = [eventId:subscription]
+                mqtt.subscribe(topic, qos: .qos0)
             }
-            if mqtt.connState == .connected {
-                if let qosEnum = CocoaMQTTQoS(rawValue: UInt8(qos)) {
-                    mqtt.subscribe(topic, qos: qosEnum)
-                } else {
-                    mqtt.subscribe(topic, qos: .qos0)                
-                }
-            }
-        } catch {
-            emitJsiEvent(clientId + ERROR_EVENT, ["clientSubscribed": false, "errorMessage": error.localizedDescription])
         }
     }
 
     func unsubscribeMqtt(_ eventId: String, clientId: String, topic: String) {
-        do {
-            if subscriptionMap[topic] == nil {
-                return
-            }
-            if let length = subscriptionMap[topic]?.count, length > 1 {
-                subscriptionMap[topic]?.removeValue(forKey: eventId)
-            } else {
-                mqtt.unsubscribe(topic)
-                subscriptionMap.removeValue(forKey: topic)
-            }
-        } catch {
-            emitJsiEvent(clientId + ERROR_EVENT, ["clientUnsubscribed": false, "errorMessage": error.localizedDescription])
+        if subscriptionMap[topic] == nil {
+            return
+        }
+        if let length = subscriptionMap[topic]?.count, length > 1 {
+            subscriptionMap[topic]?.removeValue(forKey: eventId)
+        } else {
+            mqtt.unsubscribe(topic)
+            subscriptionMap.removeValue(forKey: topic)
         }
     }
 

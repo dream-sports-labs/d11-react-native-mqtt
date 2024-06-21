@@ -1,8 +1,8 @@
 import { MqttConfig } from '../../src/Mqtt';
 
 export const mqttConfig: MqttConfig = {
-  clientId: 'dummyMqtt',
-  host: 'broker.hivemq.com',
+  clientId: 'mqttx_d11_rn_mqtt',
+  host: 'broker.emqx.io',
   port: 1883,
   options: {
     password: '',

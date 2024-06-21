@@ -1,5 +1,7 @@
+import { EventEmitter } from './EventEmitter';
 import { MqttClient } from './MqttClient';
-import type { MqttConfig } from './MqttClient.interface';
+import { MQTT_EVENTS } from './MqttClient.constants';
+import type { MqttConfig, MqttEventsInterface } from './MqttClient.interface';
 
 /**
  * This function creates a new MQTT client instance based on the provided configuration.
@@ -8,10 +10,29 @@ import type { MqttConfig } from './MqttClient.interface';
  * @returns A new instance of MqttClient configured with the provided settings.
  */
 
-export async function createMqttClient(
+export const createMqttClient = (
   config: MqttConfig
-): Promise<MqttClient | undefined> {
-  const { clientId, host, port, options } = config;
-  const mqttClient = await MqttClient.create(clientId, host, port, options);
-  return mqttClient ?? undefined;
-}
+): Promise<MqttClient | undefined> => {
+  const eventEmitter: EventEmitter = EventEmitter.getInstance();
+  const eventName = config.clientId + MQTT_EVENTS.CLIENT_INITIALIZE_EVENT;
+  return new Promise<MqttClient | undefined>((resolve) => {
+    let client: MqttClient;
+    const listener = eventEmitter.addListener(
+      eventName,
+      (ack: MqttEventsInterface[MQTT_EVENTS.CLIENT_INITIALIZE_EVENT]) => {
+        if (ack.clientInit) {
+          resolve(client);
+        } else {
+          resolve(undefined);
+        }
+        listener.remove();
+      }
+    );
+    client = new MqttClient(
+      config.clientId,
+      config.host,
+      config.port,
+      config.options
+    );
+  });
+};

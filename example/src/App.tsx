@@ -1,64 +1,87 @@
 import * as React from 'react';
 import { StyleSheet, View } from 'react-native';
 import { RoundButton } from './Button';
-import { Client } from './mqttService';
 import { mqttConfig } from './mqttConstants';
-import { SubscribeMqtt } from '../../src/Mqtt';
 import { useEventListeners } from './useEventListeners';
+import { MqttClient } from '../../src/Mqtt/MqttClient';
+import { initializeMqttClient } from './createMqtt';
+import { subscriptionConfig } from './mqttUtils';
 
 export default function App() {
-  useEventListeners();
+  const [mqttClient, setClient] = React.useState<MqttClient | undefined>(
+    undefined
+  );
 
-  const subscriptionConfig: SubscribeMqtt = {
-    topic: 'myTopic',
-    qos: 1,
-    onEvent: (payload) => {
-      console.log('Received message:', payload);
-    },
-    onSuccess: (ack) => {
-      console.log('Subscription success:', ack);
-    },
-    onError: (error) => {
-      console.log('Subscription error:', error);
-    },
-  };
+  useEventListeners(mqttClient);
 
-  const subscribeMqtt = () => Client.subscribe(subscriptionConfig);
+  React.useEffect(() => {
+    initializeMqttClient(mqttConfig).then((client) => {
+      if (client) {
+        setClient(client);
+      }
+    });
+  }, []);
 
-  const createMqtt = async () => await Client.initialize(mqttConfig);
+  const connectMqtt = React.useCallback(
+    () => (mqttClient ? mqttClient.connect() : null),
+    [mqttClient]
+  );
+
+  const subscribeMqtt = React.useCallback(
+    () => (mqttClient ? mqttClient.subscribe(subscriptionConfig) : null),
+    [mqttClient]
+  );
+
+  const disconnectMqtt = React.useCallback(
+    () => (mqttClient ? mqttClient.disconnect() : null),
+    [mqttClient]
+  );
+
+  const removeMqtt = React.useCallback(() => {
+    if (mqttClient) {
+      mqttClient.remove();
+      setClient(undefined);
+    }
+  }, [mqttClient]);
+
+  const getConnectionStatus = React.useCallback(() => {
+    const connectionStatus = mqttClient
+      ? mqttClient.getConnectionStatus()
+      : null;
+    console.log(`::MQTT connectionStatus:${connectionStatus}`);
+  }, [mqttClient]);
 
   return (
     <View style={styles.container}>
       <RoundButton
-        onPress={createMqtt}
-        backgroundColor={'#7fa99e'}
-        buttonText="Create Mqtt"
-      />
-      <RoundButton
-        onPress={Client.connect}
+        onPress={connectMqtt}
         backgroundColor={'#118a7e'}
         buttonText="Connect Mqtt"
+        disabled={!mqttClient}
       />
-
       <RoundButton
-        onPress={Client.getConnectionStatus}
+        onPress={getConnectionStatus}
         backgroundColor={'#1f6f78'}
         buttonText="Connection Status"
+        disabled={!mqttClient}
       />
       <RoundButton
         onPress={subscribeMqtt}
         backgroundColor={'#7fa99b'}
         buttonText="Subscribe Mqtt"
+        disabled={!mqttClient}
       />
       <RoundButton
-        onPress={Client.disconnect}
+        onPress={disconnectMqtt}
         backgroundColor={'#ff5959'}
         buttonText="Disconnect Mqtt"
+        disabled={!mqttClient}
       />
       <RoundButton
-        onPress={Client.remove}
+        onPress={removeMqtt}
         backgroundColor={'red'}
         buttonText="Remove Mqtt"
+        disabled={!mqttClient}
       />
     </View>
   );
