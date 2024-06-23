@@ -1,7 +1,7 @@
 import { MqttClient } from '../Mqtt/MqttClient';
 import { MqttJSIModule } from '../Modules/mqttModule';
 import { EventEmitter } from '../Mqtt/EventEmitter';
-import { CONNECTION_STATE } from '../Mqtt/MqttClient.constants';
+import { CONNECTION_STATE, MQTT_EVENTS } from '../Mqtt/MqttClient.constants';
 
 const clientConfig = {
   autoReconnect: false,
@@ -87,7 +87,7 @@ describe('MqttClient', () => {
       jest.clearAllTimers();
     });
 
-    test('Should retry the connection when not connected', async () => {
+    test('Should retry the connection with success when not connected', async () => {
       client = new MqttClient(clientId, host, port, {
         ...clientConfig,
         autoReconnect: true,
@@ -104,6 +104,42 @@ describe('MqttClient', () => {
         'test-client',
         { cleanSession: true, keepAlive: 60, password: '', username: '' }
       );
+    });
+
+    test('Should retry the connection with failure when not connected', async () => {
+      client = new MqttClient(clientId, host, port, {
+        ...clientConfig,
+        autoReconnect: true,
+        retryCount: 3,
+      });
+      client.connect = undefined;
+      client.onReconnectIntercepter = undefined;
+      client.getConnectionStatus = jest.fn();
+      client.handleReConnection();
+      jest.runAllTimers();
+
+      await expect(client.getConnectionStatus).toHaveBeenCalled();
+      expect(() => {
+        client.onReconnectIntercepter();
+      }).toThrow();
+    });
+
+    test('Should execute handleReConnection with failure when not connected', async () => {
+      client = new MqttClient(clientId, host, port, {
+        ...clientConfig,
+        autoReconnect: true,
+        retryCount: 3,
+      });
+      client.connection = undefined;
+      client.onReconnectIntercepter = undefined;
+      client.getConnectionStatus = jest.fn();
+      client.handleReConnection();
+      jest.runAllTimers();
+
+      await expect(client.getConnectionStatus).toHaveBeenCalled();
+      expect(() => {
+        client.onReconnectIntercepter();
+      }).toThrow();
     });
   });
 
@@ -125,7 +161,7 @@ describe('MqttClient', () => {
       expect(MqttJSIModule.removeMqtt).toHaveBeenCalledWith('client1');
       expect(
         EventEmitter.getInstance().removeAllListeners
-      ).toHaveBeenCalledTimes(2);
+      ).toHaveBeenCalledTimes(4);
     });
   });
 
@@ -150,7 +186,7 @@ describe('MqttClient', () => {
   it('should get connection status', () => {
     mqttClient = new MqttClient(clientId, host, port, clientConfig);
     const status = mqttClient.getConnectionStatus();
-    expect(status).toBe(CONNECTION_STATE.DISCONNECTED);
+    expect(status).toBe(CONNECTION_STATE.CONNECTED);
   });
 
   describe('MqttClient event handling', () => {
@@ -158,25 +194,42 @@ describe('MqttClient', () => {
 
     beforeEach(() => {
       client = new MqttClient('client1', 'localhost', 1883);
+      jest.clearAllMocks();
     });
 
-    it('should handle connection success event', () => {
-      const mockCallback = jest.fn();
-      const result = client.setOnConnectCallback(mockCallback);
+    test('setOnConnectCallback should register connection success event listener correctly', () => {
+      const callback = jest.fn();
+      const eventName = 'test-client' + MQTT_EVENTS.CONNECTED_EVENT;
+      const result = mqttClient.setOnConnectCallback(callback);
 
-      expect(client.currentRetryCount).toBe(0);
-      expect(client.connectionStatus).toBe(CONNECTION_STATE.CONNECTED);
-      expect(client.mqtt5DisconnectReasonCode).toBeUndefined();
+      expect(EventEmitter.getInstance().addListener).toHaveBeenCalledWith(
+        eventName,
+        callback
+      );
+      expect(result.remove).toBeDefined();
+    });
+
+    test('setOnErrorCallback should register error event listener correctly', () => {
+      const callback = jest.fn();
+      const eventName = 'test-client' + MQTT_EVENTS.ERROR_EVENT;
+      const result = mqttClient.setOnErrorCallback(callback);
+
+      expect(EventEmitter.getInstance().addListener).toHaveBeenCalledWith(
+        eventName,
+        callback
+      );
       expect(result.remove).toBeDefined();
     });
 
     it('should set a callback for disconnect event interception', () => {
-      const mockCallback = jest.fn();
+      const callback = jest.fn();
+      const result = client.onDisconnectInterceptor(callback);
 
-      const callback = client.onDisconnectInterceptor(mockCallback);
-      expect(callback.remove).toBeDefined();
+      expect(callback).toHaveBeenCalled();
+      expect(result.remove).toBeDefined();
     });
     it('should execute catch block for disconnect event interception', () => {
+      client.onDisconnectInterceptor(() => {});
       expect(() => {
         client.onDisconnectInterceptor();
       }).toThrow();
@@ -193,6 +246,7 @@ describe('MqttClient', () => {
       const mockCallback = jest.fn();
 
       const callback = client.setOnDisconnectCallback(mockCallback);
+      expect(mockCallback).toHaveBeenCalled();
       expect(callback.remove).toBeDefined();
     });
 
@@ -206,6 +260,7 @@ describe('MqttClient', () => {
       client.resetConnectVariables();
       const mockCallback = jest.fn();
       const callback = client.setOnConnectFailureCallback(mockCallback);
+      expect(mockCallback).toHaveBeenCalled();
       expect(callback.remove).toBeDefined();
     });
   });

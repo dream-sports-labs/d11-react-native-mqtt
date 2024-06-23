@@ -74,9 +74,7 @@ export class MqttClient {
     this.setOnConnectCallback(
       (ack: MqttEventsInterface[MQTT_EVENTS.CONNECTED_EVENT]) => {
         console.log(
-          `::MQTT Client: connected to mqtt://${this.host}:${
-            this.port
-          } with clientId: ${this.clientId} with response: ${ack}`
+          `::MQTT Client: connected to mqtt://${this.host}:${this.port} with clientId: ${this.clientId} with response: ${ack}`
         );
         this.currentRetryCount = 0;
         this.connectionStatus = CONNECTION_STATE.CONNECTED;
@@ -98,11 +96,7 @@ export class MqttClient {
     if (options?.autoReconnect) {
       this.onDisconnectInterceptor(async (ack) => {
         console.log(
-          `::MQTT Client: disconnected due to reasonCode: ${
-            ack.reasonCode
-          }, where previous disconnected reasonCode: ${
-            this.mqtt5DisconnectReasonCode
-          }. Response: ${ack}`
+          `::MQTT Client: disconnected due to reasonCode: ${ack.reasonCode}, where previous disconnected reasonCode: ${this.mqtt5DisconnectReasonCode}. Response: ${ack}`
         );
         if (this.connectionStatus === CONNECTION_STATE.CONNECTED) {
           console.log(
@@ -114,7 +108,7 @@ export class MqttClient {
             );
             this.connect(newOptions);
           } catch (reconnectError) {
-            console.error('Error during reconnection:', reconnectError);
+            console.log('Error during reconnection:', reconnectError);
           }
         }
         this.mqtt5DisconnectReasonCode = ack.reasonCode;
