@@ -17,9 +17,11 @@ class MqttHelper {
     private var subscriptionMap = [String: [String: Subscription]]()
     
     private let CONNECTED_EVENT = "connected"
+    private let CLIENT_INITIALIZE_EVENT = "client_initialize"
     private let DISCONNECTED_EVENT = "disconnected"
     private let SUBSCRIBE_SUCCESS = "subscribe_success"
     private let SUBSCRIBE_FAILED = "subscribe_failed"
+    private let ERROR_EVENT = "mqtt_error"
 
     private let CONNECTED = "connected"
     private let CONNECTING = "connecting"
@@ -28,10 +30,14 @@ class MqttHelper {
     init(_ clientId: String, host: String, port: Int, enableSslConfig: Bool, emitJsiEvent: @escaping (_ event: String, _ params: [String : Any]?) -> Void) {
         self.emitJsiEvent = emitJsiEvent
         self.clientId = clientId
-        mqtt = CocoaMQTT5(clientID: clientId, host: host, port: UInt16(port))
-        mqtt.delegate = self
-        mqtt.enableSSL = enableSslConfig
-        print("enable ssl ",enableSslConfig)
+        do {
+            mqtt = CocoaMQTT5(clientID: clientId, host: host, port: UInt16(port))
+            mqtt.delegate = self
+            mqtt.enableSSL = enableSslConfig
+            emitJsiEvent(clientId + CLIENT_INITIALIZE_EVENT, ["clientInit": true])
+        } catch {
+            emitJsiEvent(clientId + ERROR_EVENT, ["clientInit": true, "errorMessage": error.localizedDescription])
+        }
     }
 
     func connectMqtt(_ clientId: String, options: MqttHelperOptions) {

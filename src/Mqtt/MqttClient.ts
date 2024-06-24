@@ -5,9 +5,11 @@ import {
   MqttQos,
 } from './MqttClient.constants';
 import type {
+  DisconnectCallback,
   MqttConnect,
   MqttEventsInterface,
   MqttOptions,
+  SubscribeMqtt,
 } from './MqttClient.interface';
 import { EventEmitter } from './EventEmitter';
 import { getMqttBackoffTime } from './MqttClient.utils';
@@ -72,11 +74,7 @@ export class MqttClient {
     this.setOnConnectCallback(
       (ack: MqttEventsInterface[MQTT_EVENTS.CONNECTED_EVENT]) => {
         console.log(
-          `::MQTT Client: connected to mqtt://${this.host}:${
-            this.port
-          } with clientId: ${this.clientId} with response: ${JSON.stringify(
-            ack
-          )}`
+          `::MQTT Client: connected to mqtt://${this.host}:${this.port} with clientId: ${this.clientId} with response: ${ack}`
         );
         this.currentRetryCount = 0;
         this.connectionStatus = CONNECTION_STATE.CONNECTED;
@@ -98,20 +96,20 @@ export class MqttClient {
     if (options?.autoReconnect) {
       this.onDisconnectInterceptor(async (ack) => {
         console.log(
-          `::MQTT Client: disconnected due to reasonCode: ${
-            ack.reasonCode
-          }, where previous disconnected reasonCode: ${
-            this.mqtt5DisconnectReasonCode
-          }. Response: ${JSON.stringify(ack)}`
+          `::MQTT Client: disconnected due to reasonCode: ${ack.reasonCode}, where previous disconnected reasonCode: ${this.mqtt5DisconnectReasonCode}. Response: ${ack}`
         );
         if (this.connectionStatus === CONNECTION_STATE.CONNECTED) {
           console.log(
             '::MQTT Client: client is previously connected but disconnected now, so reconnecting with expo backoff'
           );
-          const newOptions = await this.onReconnectIntercepter?.(
-            this.mqtt5DisconnectReasonCode
-          );
-          this.connect(newOptions);
+          try {
+            const newOptions = await this.onReconnectIntercepter?.(
+              this.mqtt5DisconnectReasonCode
+            );
+            this.connect(newOptions);
+          } catch (reconnectError) {
+            console.log('Error during reconnection:', reconnectError);
+          }
         }
         this.mqtt5DisconnectReasonCode = ack.reasonCode;
       });
@@ -174,14 +172,15 @@ export class MqttClient {
     );
     this.retryTimer = setTimeout(async () => {
       if (!isConnected) {
-        const newOptions = await this.onReconnectIntercepter?.(
-          this.mqtt5DisconnectReasonCode
-        );
-        console.log(
-          `::MQTT Client: Current connection status is ${isConnected} so reconnecting with exponential backoff. Retry count: ${this.currentRetryCount} with previous disconnection reasonCode: ${this.mqtt5DisconnectReasonCode}, where max allowed reties: ${this.options?.retryCount}`
-        );
-        this.resetOptions(newOptions);
-        this.connection();
+        try {
+          const newOptions = await this.onReconnectIntercepter?.(
+            this.mqtt5DisconnectReasonCode
+          );
+          this.resetOptions(newOptions);
+          this.connection();
+        } catch (error) {
+          console.log('Failed during retry attempt:', error);
+        }
       }
     }, backoffTime);
   }
@@ -193,22 +192,23 @@ export class MqttClient {
   private onDisconnectInterceptor(
     callback: (ack: MqttEventsInterface[MQTT_EVENTS.DISCONNECTED_EVENT]) => void
   ) {
-    const listener = this.eventEmitter.addListener<
-      MqttEventsInterface[MQTT_EVENTS.DISCONNECTED_EVENT]
-    >(this.clientId + MQTT_EVENTS.DISCONNECTED_EVENT, (ack) => {
-      try {
-        callback(ack);
-      } catch (e) {
-        callback({
-          reasonCode: Mqtt5ReasonCode.DEFAULT,
-        });
+    const event = this.clientId + MQTT_EVENTS.DISCONNECTED_EVENT;
+    const listener = this.eventEmitter.addListener(
+      event,
+      (ack: MqttEventsInterface[MQTT_EVENTS.DISCONNECTED_EVENT]) => {
+        try {
+          callback(ack);
+        } catch (e) {
+          callback({
+            reasonCode: Mqtt5ReasonCode.DEFAULT,
+          });
+        }
       }
-    });
+    );
     return {
       remove: listener.remove,
     };
   }
-
   /**
    * Private method to reset connection-related variables when initiating a connection attempt.
    * It sets the current retry count to zero and updates the connection status to 'connecting'.
@@ -275,9 +275,23 @@ export class MqttClient {
   setOnConnectCallback(
     callback: (ack: MqttEventsInterface[MQTT_EVENTS.CONNECTED_EVENT]) => void
   ) {
-    const listener = this.eventEmitter.addListener<
-      MqttEventsInterface[MQTT_EVENTS.CONNECTED_EVENT]
-    >(this.clientId + MQTT_EVENTS.CONNECTED_EVENT, callback);
+    const eventName = this.clientId + MQTT_EVENTS.CONNECTED_EVENT;
+    const listener = this.eventEmitter.addListener(eventName, callback);
+    return {
+      remove: listener.remove,
+    };
+  }
+
+  /**
+   * Method to set a callback for error that occurs during initilize.
+   * @param callback Callback function to handle error events.
+   * @returns An object with a remove method to remove the listener.
+   */
+  setOnErrorCallback(
+    callback: (ack: MqttEventsInterface[MQTT_EVENTS.ERROR_EVENT]) => void
+  ) {
+    const eventName = this.clientId + MQTT_EVENTS.ERROR_EVENT;
+    const listener = this.eventEmitter.addListener(eventName, callback);
     return {
       remove: listener.remove,
     };
@@ -312,11 +326,8 @@ export class MqttClient {
    */
   setOnDisconnectCallback(
     callback: (
-      mqtt5ReasonCode: Mqtt5ReasonCode,
-      options: MqttConnect & {
-        disconnectType: 'forceDisconnected' | 'autoDisconnected';
-        retryCount: number;
-      }
+      mqtt5ReasonCode: DisconnectCallback['mqtt5ReasonCode'],
+      options: DisconnectCallback['options']
     ) => void
   ) {
     const listener = this.onDisconnectInterceptor(({ reasonCode }) => {
@@ -351,19 +362,7 @@ export class MqttClient {
     onEvent,
     onSuccess = () => {},
     onError = () => {},
-  }: {
-    topic: string;
-    qos?: MqttQos;
-    onEvent: (
-      payload: MqttEventsInterface[MQTT_EVENTS.SUBSCRIPTION_EVENT]
-    ) => void;
-    onSuccess?: (
-      ack: MqttEventsInterface[MQTT_EVENTS.SUBSCRIPTION_SUCCESS_EVENT]
-    ) => void;
-    onError?: (
-      error: MqttEventsInterface[MQTT_EVENTS.SUBSCRIPTION_FAILED_EVENT]
-    ) => void;
-  }) {
+  }: SubscribeMqtt) {
     const eventId = this.getMqttSubscribeEventId(topic, qos);
     MqttJSIModule.subscribeMqtt(eventId, this.clientId, topic, qos);
 
@@ -384,6 +383,7 @@ export class MqttClient {
         listener.remove();
         success.remove();
         failed.remove();
+        MqttJSIModule.unsubscribeMqtt(eventId, this.clientId, topic);
       },
     };
   }
@@ -396,7 +396,7 @@ export class MqttClient {
    *          - 'disconnected': Indicates that the client is not currently connected to the MQTT broker.
    */
   getConnectionStatus() {
-    return MqttJSIModule.getConnectionStatusMqtt(this.clientId);
+    return this.connectionStatus;
   }
 
   /**
@@ -414,11 +414,19 @@ export class MqttClient {
   remove() {
     MqttJSIModule.removeMqtt(this.clientId);
 
+    clearTimeout(this.retryTimer);
+
     this.eventEmitter.removeAllListeners(
       this.clientId + MQTT_EVENTS.DISCONNECTED_EVENT
     );
     this.eventEmitter.removeAllListeners(
       this.clientId + MQTT_EVENTS.CONNECTED_EVENT
+    );
+    this.eventEmitter.removeAllListeners(
+      this.clientId + MQTT_EVENTS.CLIENT_INITIALIZE_EVENT
+    );
+    this.eventEmitter.removeAllListeners(
+      this.clientId + MQTT_EVENTS.ERROR_EVENT
     );
   }
 }

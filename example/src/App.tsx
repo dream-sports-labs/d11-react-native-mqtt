@@ -1,60 +1,87 @@
 import * as React from 'react';
 import { StyleSheet, View } from 'react-native';
-import { createMqtt } from './create-mqtt';
-import type { MqttClient } from '../../src/Mqtt/MqttClient';
 import { RoundButton } from './Button';
+import { mqttConfig } from './mqttConstants';
+import { useEventListeners } from './useEventListeners';
+import { MqttClient } from '../../src/Mqtt/MqttClient';
+import { initializeMqttClient } from './createMqtt';
+import { subscriptionConfig } from './mqttUtils';
 
 export default function App() {
-  const [client, setClient] = React.useState<MqttClient | undefined>(undefined);
+  const [mqttClient, setClient] = React.useState<MqttClient | undefined>(
+    undefined
+  );
 
-  const connectMqtt = () => {
-    if (client) {
-      client.connect();
-      console.log(`::MQTT Connect Mqtt`);
+  useEventListeners(mqttClient);
+
+  React.useEffect(() => {
+    initializeMqttClient(mqttConfig).then((client) => {
+      if (client) {
+        setClient(client);
+      }
+    });
+  }, []);
+
+  const connectMqtt = React.useCallback(
+    () => (mqttClient ? mqttClient.connect() : null),
+    [mqttClient]
+  );
+
+  const subscribeMqtt = React.useCallback(
+    () => (mqttClient ? mqttClient.subscribe(subscriptionConfig) : null),
+    [mqttClient]
+  );
+
+  const disconnectMqtt = React.useCallback(
+    () => (mqttClient ? mqttClient.disconnect() : null),
+    [mqttClient]
+  );
+
+  const removeMqtt = React.useCallback(() => {
+    if (mqttClient) {
+      mqttClient.remove();
+      setClient(undefined);
     }
-  };
+  }, [mqttClient]);
 
-  const disconnectMqtt = () => {
-    if (client) {
-      client.disconnect();
-      console.log(`::MQTT Disconnect  Mqtt`);
-    }
-  };
-
-  const getConnectionStatusMqtt = () => {
-    if (client) {
-      const status = client.getConnectionStatus();
-      console.log(`::MQTT Mqtt Status ${status}`);
-    }
-  };
-
-  const createMqttClient = () => {
-    const newClient = createMqtt();
-    setClient(newClient);
-    console.log(`::MQTT Create Mqtt`);
-  };
+  const getConnectionStatus = React.useCallback(() => {
+    const connectionStatus = mqttClient
+      ? mqttClient.getConnectionStatus()
+      : null;
+    console.log(`::MQTT connectionStatus:${connectionStatus}`);
+  }, [mqttClient]);
 
   return (
     <View style={styles.container}>
       <RoundButton
-        onPress={createMqttClient}
-        backgroundColor={'#7fa99b'}
-        buttonText="Create Mqtt"
-      />
-      <RoundButton
         onPress={connectMqtt}
         backgroundColor={'#118a7e'}
         buttonText="Connect Mqtt"
+        disabled={!mqttClient}
       />
       <RoundButton
-        onPress={getConnectionStatusMqtt}
+        onPress={getConnectionStatus}
         backgroundColor={'#1f6f78'}
         buttonText="Connection Status"
+        disabled={!mqttClient}
+      />
+      <RoundButton
+        onPress={subscribeMqtt}
+        backgroundColor={'#7fa99b'}
+        buttonText="Subscribe Mqtt"
+        disabled={!mqttClient}
       />
       <RoundButton
         onPress={disconnectMqtt}
         backgroundColor={'#ff5959'}
         buttonText="Disconnect Mqtt"
+        disabled={!mqttClient}
+      />
+      <RoundButton
+        onPress={removeMqtt}
+        backgroundColor={'red'}
+        buttonText="Remove Mqtt"
+        disabled={!mqttClient}
       />
     </View>
   );
