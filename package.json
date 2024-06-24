@@ -1,5 +1,5 @@
 {
-  "name": "@dream11/react-native-mqtt",
+  "name": "@d11/react-native-mqtt",
   "version": "0.0.1",
   "description": "React native support for using mqtt",
   "module": "dist/Modules/mqtt-modules.js",
