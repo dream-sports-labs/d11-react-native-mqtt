@@ -1849,9 +1849,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@dream11/react-native-mqtt@workspace:.":
+"@d11/react-native-mqtt@workspace:.":
   version: 0.0.0-use.local
-  resolution: "@dream11/react-native-mqtt@workspace:."
+  resolution: "@d11/react-native-mqtt@workspace:."
   dependencies:
     "@commitlint/config-conventional": ^17.0.2
     "@evilmartians/lefthook": ^1.5.0
