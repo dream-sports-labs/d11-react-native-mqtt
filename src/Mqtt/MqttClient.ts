@@ -66,7 +66,6 @@ export class MqttClient {
      * @param enableSslConfig A boolean indicating whether SSL/TLS configuration should be enabled (default: false).
      *                        If true, the client uses SSL/TLS for secure communication with the MQTT broker.
      */
-
     this.createClient(clientId, host, port, options?.enableSslConfig ?? false);
 
     this.setOnConnectCallback(
@@ -467,7 +466,7 @@ export class MqttClient {
    *          - 'disconnected': Indicates that the client is not currently connected to the MQTT broker.
    */
   getConnectionStatus() {
-    return MqttJSIModule.getConnectionStatusMqtt(this.clientId);
+    return this.connectionStatus;
   }
 
   getCurrentRetryCount() {

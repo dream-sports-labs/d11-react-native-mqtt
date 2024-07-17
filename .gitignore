@@ -71,3 +71,5 @@ android/keystores/debug.keystore
 # test coverage
 coverage/
 
+# generated types
+dist/

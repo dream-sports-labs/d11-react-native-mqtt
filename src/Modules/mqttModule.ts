@@ -6,7 +6,6 @@ export const MqttModule: NativeModule & {
 
 export interface MqttModuleProxy {
   removeMqtt: (clientId: string) => void;
-
   connectMqtt: (
     clientId: string,
     options: {
