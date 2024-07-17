@@ -5,13 +5,6 @@ export const MqttModule: NativeModule & {
 } = NativeModules.MqttModule;
 
 export interface MqttModuleProxy {
-  createMqtt: (
-    clientId: string,
-    host: string,
-    port: number,
-    enableSslConfig: boolean
-  ) => void;
-
   removeMqtt: (clientId: string) => void;
 
   connectMqtt: (

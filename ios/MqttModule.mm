@@ -40,14 +40,8 @@ RCT_EXPORT_MODULE(MqttModule)
      [self sendEventWithName:eventName body: params];
 }
 
-static Value createMqtt(Runtime &runtime, const Value &thisValue, const Value *arguments, size_t count) {
-    NSString *clientId = mqtt::convertJSIStringToNSString(runtime, arguments[0].getString(runtime));
-    NSString *host = mqtt::convertJSIStringToNSString(runtime, arguments[1].getString(runtime));
-    NSInteger port = [mqtt::convertJSIValueToObjCObject(runtime, arguments[2]) intValue];
-    BOOL enableSslConfig = arguments[3].isBool() ? arguments[3].getBool() : false;
-    
-    [[Mqtt shared] createMqtt:clientId host:host port:port enableSslConfig:enableSslConfig];
-    return Value();
+RCT_EXPORT_METHOD(createMqtt:(NSString *)clientId host:(NSString *)host port:(NSInteger)port enableSsl:(BOOL)enableSsl) {
+    [[Mqtt shared] createMqtt:clientId host:host port:port enableSslConfig:enableSsl];
 }
 
 static Value removeMqtt(Runtime &runtime, const Value &thisValue, const Value *arguments, size_t count) {
@@ -107,7 +101,6 @@ static void installJSIModule(Runtime &jsiRuntime) {
     Object module = Object(jsiRuntime);
     
     // Callable properties
-    mqtt::registerCxxFunction(jsiRuntime, module, "createMqtt", 3, createMqtt);
     mqtt::registerCxxFunction(jsiRuntime, module, "removeMqtt", 1, removeMqtt);
     mqtt::registerCxxFunction(jsiRuntime, module, "connectMqtt", 2, connectMqtt);
     mqtt::registerCxxFunction(jsiRuntime, module, "disconnectMqtt", 1, disconnectMqtt);

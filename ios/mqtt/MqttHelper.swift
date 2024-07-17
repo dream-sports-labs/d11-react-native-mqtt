@@ -30,13 +30,14 @@ class MqttHelper {
     init(_ clientId: String, host: String, port: Int, enableSslConfig: Bool, emitJsiEvent: @escaping (_ event: String, _ params: [String : Any]?) -> Void) {
         self.emitJsiEvent = emitJsiEvent
         self.clientId = clientId
-        do {
-            mqtt = CocoaMQTT5(clientID: clientId, host: host, port: UInt16(port))
-            mqtt.delegate = self
-            mqtt.enableSSL = enableSslConfig
+        mqtt = CocoaMQTT5(clientID: clientId, host: host, port: UInt16(port))
+        mqtt.delegate = self
+        mqtt.enableSSL = enableSslConfig
+
+        if mqtt.clientID == clientId && mqtt.host == host && mqtt.port == UInt16(port) {
             emitJsiEvent(clientId + CLIENT_INITIALIZE_EVENT, ["clientInit": true])
-        } catch {
-            emitJsiEvent(clientId + ERROR_EVENT, ["clientInit": true, "errorMessage": error.localizedDescription])
+        } else {
+            emitJsiEvent(clientId + ERROR_EVENT, ["clientInit": false, "errorMessage": "Failed to initialize MQTT client"])
         }
     }
 
@@ -45,7 +46,7 @@ class MqttHelper {
         connectProperties.topicAliasMaximum = 0
         connectProperties.sessionExpiryInterval = 0
         connectProperties.receiveMaximum = 100
-        connectProperties.maximumPacketSize = 500
+        connectProperties.maximumPacketSize = 1024*1024
         mqtt.connectProperties = connectProperties
 
         mqtt.username = options.username
@@ -69,9 +70,13 @@ class MqttHelper {
         }
         if mqtt.connState == .connected {
             if let qosEnum = CocoaMQTTQoS(rawValue: UInt8(qos)) {
-                mqtt.subscribe(topic, qos: qosEnum)
+                let mqttSubscribe = MqttSubscription(topic: topic, qos: qosEnum)
+                mqttSubscribe.retainHandling = CocoaRetainHandlingOption.sendOnSubscribe
+                mqtt.subscribe([mqttSubscribe])
             } else {
-                mqtt.subscribe(topic, qos: .qos0)
+                let mqttSubscribe = MqttSubscription(topic: topic, qos: .qos0)
+                mqttSubscribe.retainHandling = CocoaRetainHandlingOption.sendOnSubscribe
+                mqtt.subscribe([mqttSubscribe])
             }
         }
     }

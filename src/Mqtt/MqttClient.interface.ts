@@ -80,7 +80,11 @@ export type SubscribeMqtt = {
 export type DisconnectCallback = {
   mqtt5ReasonCode: Mqtt5ReasonCode;
   options: MqttConnect & {
-    disconnectType: 'forceDisconnected' | 'autoDisconnected';
+    disconnectType:
+      | 'forceDisconnected'
+      | 'autoDisconnected'
+      | 'maxRetriesReached'
+      | 'retrying';
     retryCount: number;
   };
 };
