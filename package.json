@@ -37,13 +37,13 @@
     "ios",
     "android"
   ],
-  "repository": "https://github.com/dream11/d11-react-native-mqtt",
+  "repository": "https://github.com/dream-sports-labs/d11-react-native-mqtt.git",
   "author": "Vibhor Verma <vibhor.verma@dream11.com> (https://github.com/vibhor-d11)",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/dream11/d11-react-native-mqtt/issues"
+    "url": "https://github.com/dream-sports-labs/d11-react-native-mqtt.git/issues"
   },
-  "homepage": "https://github.com/dream11/d11-react-native-mqtt#readme",
+  "homepage": "https://github.com/dream-sports-labs/d11-react-native-mqtt.git#readme",
   "publishConfig": {
     "registry": "https://npm.pkg.github.com"
   },

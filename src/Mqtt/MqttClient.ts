@@ -56,16 +56,6 @@ export class MqttClient {
       return;
     }
 
-    /**
-     * Function call to create an MQTT client instance using the native module.
-     * It initializes an MQTT client with the specified parameters such as client ID, host, port, and SSL configuration.
-     * This function is responsible for creating the MQTT client instance.
-     * @param clientId The unique identifier for the MQTT client.
-     * @param host The hostname or IP address of the MQTT broker.
-     * @param port The port number of the MQTT broker.
-     * @param enableSslConfig A boolean indicating whether SSL/TLS configuration should be enabled (default: false).
-     *                        If true, the client uses SSL/TLS for secure communication with the MQTT broker.
-     */
     this.createClient(clientId, host, port, options?.enableSslConfig ?? false);
 
     this.setOnConnectCallback(
@@ -113,6 +103,16 @@ export class MqttClient {
     }
   }
 
+  /**
+   * Function call to create an MQTT client instance using the native module.
+   * It initializes an MQTT client with the specified parameters such as client ID, host, port, and SSL configuration.
+   * This function is responsible for creating the MQTT client instance.
+   * @param clientId The unique identifier for the MQTT client.
+   * @param host The hostname or IP address of the MQTT broker.
+   * @param port The port number of the MQTT broker.
+   * @param enableSslConfig A boolean indicating whether SSL/TLS configuration should be enabled (default: false).
+   *                        If true, the client uses SSL/TLS for secure communication with the MQTT broker.
+   */
   async createClient(
     clientId: any,
     host: any,
@@ -366,12 +366,28 @@ export class MqttClient {
    * Public Callbacks
    * ---------------------------------------------------------------------------------------------------------
    */
-  // If connect intercepted, we need not pass any explicit options on mqtt.connect()
+
+  /**
+   * If connect is intercepted, we do not need to pass any explicit options to mqtt.connect().
+   * This optional method is used to intercept the connection options before connecting to the MQTT broker.
+   * It allows for asynchronous processing of the connection options and may modify or override them.
+   * The method returns a promise that resolves to either the modified options or undefined.
+   * @param options Optional original options for the MQTT connection.
+   * @returns A promise that resolves to either the modified connection options or undefined.
+   */
   connectInterceptor?: (
     options?: MqttOptions
   ) => Promise<MqttConnect | undefined>;
 
-  // Should be used if we want to intercept and pass new options (example new auth token) once disconnected by MQTT broker
+  /**
+   * Should be used if we want to intercept and pass new options (e.g., a new auth token) once disconnected by the MQTT broker.
+   * This optional method is used to intercept the reconnection process and allows for the modification of connection options based on the reason for disconnection.
+   * It allows for asynchronous processing and can modify or override the reconnection options.
+   * The method returns a promise that resolves to either the modified options or undefined.
+   * @param mqtt5ReasonCode Optional reason code for disconnection as specified in MQTT 5.
+   * @returns A promise that resolves to either the modified reconnection options or undefined.
+   */
+
   reconnectInterceptor?: (
     mqtt5ReasonCode?: Mqtt5ReasonCode
   ) => Promise<MqttConnect | undefined>;
@@ -468,6 +484,12 @@ export class MqttClient {
   getConnectionStatus() {
     return this.connectionStatus;
   }
+
+  /**
+   * Retrieves the current retry count for MQTT connection attempts.
+   * This method returns the number of times the client has attempted to reconnect to the MQTT broker.
+   * @returns The current retry count as a number.
+   */
 
   getCurrentRetryCount() {
     return this.currentRetryCount;

@@ -46,10 +46,10 @@ This project requires the following minimum versions to function properly:
 
 ```sh
 using NPM
-npm install @dream11/react-native-mqtt
+npm install @d11/react-native-mqtt
 
 using Yarn
-yarn add @dream11/react-native-mqtt
+yarn add @d11/react-native-mqtt
 ```
 
 ### General configuration
@@ -82,8 +82,8 @@ yarn add @dream11/react-native-mqtt
 ### Creation of clients
 
 ```tsx
-import { createMqttClient, MqttConfig } from "@dream11/react-native-mqtt";
-import { MqttClient } from "@dream11/react-native-mqtt/dist/Mqtt/MqttClient";
+import { createMqttClient, MqttConfig } from "@d11/react-native-mqtt";
+import { MqttClient } from "@d11/react-native-mqtt/dist/Mqtt/MqttClient";
 
 export const createMqtt = (mqttConfig: MqttConfig): MqttClient => {
   const client = createMqttClient({
@@ -113,8 +113,8 @@ export const createMqtt = (mqttConfig: MqttConfig): MqttClient => {
 import * as React from 'react';
 import { StyleSheet, View, Text, Button } from 'react-native';
 import { createMqtt } from './components/create-mqtt';
-import { MqttClient } from '@dream11/react-native-mqtt/dist/Mqtt/MqttClient';
-import { MqttConfig } from "@dream11/react-native-mqtt";
+import { MqttClient } from '@d11/react-native-mqtt/dist/Mqtt/MqttClient';
+import { MqttConfig } from "@d11/react-native-mqtt";
 
 const mqttConfig: MqttConfig =  {
   "clientId": "mqttx_0121",
@@ -275,6 +275,40 @@ Mqtt5ReasonCode {
   DEFAULT = -1,
 }
 ```
+
+- `setOnErrorCallback`: Sets a callback for handling error events.
+
+```tsx
+type onErrorCallback = (ack: MqttEventsInterface[MQTT_EVENTS.ERROR_EVENT]) => void
+
+client.setOnErrorCallback(onErrorCallback)
+```
+
+- `setOnDisconnectCallback`: Sets a callback for handling client disconnect events.
+
+```tsx
+type onDisconnectCallback = (mqtt5ReasonCode: DisconnectCallback['mqtt5ReasonCode'],
+options: DisconnectCallback['options']) => void
+
+client.setOnDisconnectCallback(onDisconnectCallback)
+```
+
+- `connectInterceptor`: Method to intercept connection options and may modify or override them.
+
+```tsx
+type connectInterceptor?: (options?: MqttOptions) => Promise<MqttConnect | undefined>
+
+client.connectInterceptor()
+```
+
+- `reconnectInterceptor`: Method to intercept connection options and may modify or override them.
+
+```tsx
+type reconnectInterceptor?: (mqtt5ReasonCode?: Mqtt5ReasonCode) => Promise<MqttConnect | undefined>
+
+client.reconnectInterceptor()
+```
+
 - `setOnReconnectInterceptor`: PerformS an action everytime before reconnect after first connect fails.
 
 ```tsx
@@ -298,6 +332,13 @@ client.setOnConnectFailureCallback(onConnectFailureCallback)
 ```tsx
 getConnectionStatus: () => string
 const status = client.getConnectionStatus();
+```
+
+- `getCurrentRetryCount`: Gets the current retry count.
+
+```tsx
+getConnectionStatus: () => number
+const status = client.getCurrentRetryCount();
 ```
 
 - `subscribe`: Subscribes to a topic with onEvent, onSuccess , onError callbacks support.
