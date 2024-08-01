@@ -69,15 +69,10 @@ class MqttHelper {
             subscriptionMap[topic] = [eventId:subscription]
         }
         if mqtt.connState == .connected {
-            if let qosEnum = CocoaMQTTQoS(rawValue: UInt8(qos)) {
-                let mqttSubscribe = MqttSubscription(topic: topic, qos: qosEnum)
-                mqttSubscribe.retainHandling = CocoaRetainHandlingOption.sendOnSubscribe
-                mqtt.subscribe([mqttSubscribe])
-            } else {
-                let mqttSubscribe = MqttSubscription(topic: topic, qos: .qos0)
-                mqttSubscribe.retainHandling = CocoaRetainHandlingOption.sendOnSubscribe
-                mqtt.subscribe([mqttSubscribe])
-            }
+            let qosEnum = CocoaMQTTQoS(rawValue: UInt8(qos)) ?? .qos0
+            let mqttSubscribe = MqttSubscription(topic: topic, qos: qosEnum)
+            mqttSubscribe.retainHandling = CocoaRetainHandlingOption.sendOnSubscribe
+            mqtt.subscribe([mqttSubscribe])
         }
     }
 
@@ -116,11 +111,10 @@ extension MqttHelper: CocoaMQTT5Delegate {
 
         for (topic, idSubscriptionMap) in subscriptionMap {
             if let maxQos = idSubscriptionMap.values.max(by: { $0.qos < $1.qos })?.qos {
-                if let qosEnum = CocoaMQTTQoS(rawValue: UInt8(maxQos)) {
-                    mqtt5.subscribe(topic, qos: qosEnum)
-                } else {
-                    mqtt5.subscribe(topic, qos: .qos0)
-                }
+                let qosEnum = CocoaMQTTQoS(rawValue: UInt8(maxQos)) ?? .qos0
+                let mqttSubscribe = MqttSubscription(topic: topic, qos: qosEnum)
+                mqttSubscribe.retainHandling = CocoaRetainHandlingOption.sendOnSubscribe
+                mqtt5.subscribe([mqttSubscribe])
             }
         }
     }
@@ -138,7 +132,7 @@ extension MqttHelper: CocoaMQTT5Delegate {
         if let allSubscriptionsForTopic = subscriptionMap[message.topic] {
             for eventId in allSubscriptionsForTopic.keys {
                 emitJsiEvent(eventId, ["payload": message.string ?? "", "topic": message.topic, "qos": message.qos.rawValue])
-                print("message ",message.string)
+                print("message ", message.string ?? "")
             }
         }
     }

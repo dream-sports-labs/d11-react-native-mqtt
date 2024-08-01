@@ -482,7 +482,7 @@ export class MqttClient {
    *          - 'disconnected': Indicates that the client is not currently connected to the MQTT broker.
    */
   getConnectionStatus() {
-    return this.connectionStatus;
+    return MqttJSIModule.getConnectionStatusMqtt(this.clientId);
   }
 
   /**
