@@ -16,6 +16,7 @@
     "*.podspec",
     "!ios/build",
     "!android/build",
+    "!android/.cxx",
     "!android/gradle",
     "!android/gradlew",
     "!android/gradlew.bat",
