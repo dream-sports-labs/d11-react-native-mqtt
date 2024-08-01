@@ -45,7 +45,8 @@
   },
   "homepage": "https://github.com/dream-sports-labs/d11-react-native-mqtt.git#readme",
   "publishConfig": {
-    "registry": "https://npm.pkg.github.com"
+    "access": "public",
+    "registry": "https://registry.npmjs.org/"
   },
   "resolutions": {
     "@types/react-native": "0.72.5",
