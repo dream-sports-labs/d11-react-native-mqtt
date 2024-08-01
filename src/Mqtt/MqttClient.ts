@@ -157,9 +157,8 @@ export class MqttClient {
     clearTimeout(this.retryTimer);
 
     const shouldRetry =
-      this.options?.autoReconnect &&
-      (typeof this.options?.retryCount !== 'number' ||
-        this.currentRetryCount < this.options?.retryCount);
+      this?.options?.autoReconnect &&
+      this.currentRetryCount < (this.options?.retryCount || 0);
 
     if (shouldRetry) {
       this.handleReConnection();

@@ -10,8 +10,7 @@ export const EventEmitter = (function () {
   var instance: EventEmitter;
 
   function createInstance() {
-    var emitter = new NativeEventEmitter(MqttModule);
-    return emitter;
+   return new NativeEventEmitter(MqttModule);
   }
 
   return {
