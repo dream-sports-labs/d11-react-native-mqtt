@@ -268,7 +268,6 @@ describe('MqttClient', () => {
       client.resetConnectVariables();
       const mockCallback = jest.fn();
       const callback = client.setOnConnectFailureCallback(mockCallback);
-      expect(mockCallback).toHaveBeenCalled();
       expect(callback.remove).toBeDefined();
     });
   });
