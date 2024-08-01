@@ -52,16 +52,24 @@ class MqttModuleImpl(reactContext: ReactApplicationContext?) :
     promise.resolve(nativeMultiply(a, b))
   }
 
+  @ReactMethod
+  fun createMqtt(clientId: String, host: String, port: Int, enableSslConfig: Boolean, promise: Promise) {
+        try {
+            MqttManager.createMqtt(clientId, host, port, enableSslConfig, this::emitJsiEvent)
+            promise.resolve(null)
+            Log.d("MQTT", "connect called via React Native bridge")
+        } catch (e: Exception) {
+            promise.reject("Error", "Failed to create MQTT connection", e)
+            Log.e("MQTT", "Error in createMqtt", e)
+        }
+  }
+
     private fun emitJsiEvent(eventId: String, payload: WritableMap) {
         reactApplicationContext
             .getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter::class.java)
             .emit(eventId, payload)
     }
 
-    override fun createMqtt(clientId: String, host: String, port: Integer, enableSslConfig: java.lang.Boolean) {
-        MqttManager.createMqtt(clientId, host, port.toInt(), enableSslConfig.booleanValue(), this::emitJsiEvent)
-      Log.d("::::D11MQTT",":::: connect called via jsi bridge")
-    }
     override fun removeMqtt(clientId: String) {
         MqttManager.removeMqtt(clientId)
       Log.d("::::D11MQTT",":::: removeMqtt called via jsi bridge")

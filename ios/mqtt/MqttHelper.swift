@@ -30,13 +30,14 @@ class MqttHelper {
     init(_ clientId: String, host: String, port: Int, enableSslConfig: Bool, emitJsiEvent: @escaping (_ event: String, _ params: [String : Any]?) -> Void) {
         self.emitJsiEvent = emitJsiEvent
         self.clientId = clientId
-        do {
-            mqtt = CocoaMQTT5(clientID: clientId, host: host, port: UInt16(port))
-            mqtt.delegate = self
-            mqtt.enableSSL = enableSslConfig
+        mqtt = CocoaMQTT5(clientID: clientId, host: host, port: UInt16(port))
+        mqtt.delegate = self
+        mqtt.enableSSL = enableSslConfig
+
+        if mqtt.clientID == clientId && mqtt.host == host && mqtt.port == UInt16(port) {
             emitJsiEvent(clientId + CLIENT_INITIALIZE_EVENT, ["clientInit": true])
-        } catch {
-            emitJsiEvent(clientId + ERROR_EVENT, ["clientInit": true, "errorMessage": error.localizedDescription])
+        } else {
+            emitJsiEvent(clientId + ERROR_EVENT, ["clientInit": false, "errorMessage": "Failed to initialize MQTT client"])
         }
     }
 
@@ -45,7 +46,7 @@ class MqttHelper {
         connectProperties.topicAliasMaximum = 0
         connectProperties.sessionExpiryInterval = 0
         connectProperties.receiveMaximum = 100
-        connectProperties.maximumPacketSize = 500
+        connectProperties.maximumPacketSize = 1024*1024
         mqtt.connectProperties = connectProperties
 
         mqtt.username = options.username
@@ -68,11 +69,10 @@ class MqttHelper {
             subscriptionMap[topic] = [eventId:subscription]
         }
         if mqtt.connState == .connected {
-            if let qosEnum = CocoaMQTTQoS(rawValue: UInt8(qos)) {
-                mqtt.subscribe(topic, qos: qosEnum)
-            } else {
-                mqtt.subscribe(topic, qos: .qos0)
-            }
+            let qosEnum = CocoaMQTTQoS(rawValue: UInt8(qos)) ?? .qos0
+            let mqttSubscribe = MqttSubscription(topic: topic, qos: qosEnum)
+            mqttSubscribe.retainHandling = CocoaRetainHandlingOption.sendOnSubscribe
+            mqtt.subscribe([mqttSubscribe])
         }
     }
 
@@ -111,11 +111,10 @@ extension MqttHelper: CocoaMQTT5Delegate {
 
         for (topic, idSubscriptionMap) in subscriptionMap {
             if let maxQos = idSubscriptionMap.values.max(by: { $0.qos < $1.qos })?.qos {
-                if let qosEnum = CocoaMQTTQoS(rawValue: UInt8(maxQos)) {
-                    mqtt5.subscribe(topic, qos: qosEnum)
-                } else {
-                    mqtt5.subscribe(topic, qos: .qos0)
-                }
+                let qosEnum = CocoaMQTTQoS(rawValue: UInt8(maxQos)) ?? .qos0
+                let mqttSubscribe = MqttSubscription(topic: topic, qos: qosEnum)
+                mqttSubscribe.retainHandling = CocoaRetainHandlingOption.sendOnSubscribe
+                mqtt5.subscribe([mqttSubscribe])
             }
         }
     }
@@ -133,7 +132,7 @@ extension MqttHelper: CocoaMQTT5Delegate {
         if let allSubscriptionsForTopic = subscriptionMap[message.topic] {
             for eventId in allSubscriptionsForTopic.keys {
                 emitJsiEvent(eventId, ["payload": message.string ?? "", "topic": message.topic, "qos": message.qos.rawValue])
-                print("message ",message.string)
+                print("message ", message.string ?? "")
             }
         }
     }

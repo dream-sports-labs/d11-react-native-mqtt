@@ -12,7 +12,7 @@ const MockMqttModule = {
   disconnectMqtt: jest.fn(),
   subscribeMqtt: jest.fn(),
   unsubscribeMqtt: jest.fn(),
-  getConnectionStatusMqtt: jest.fn(() => 'disconnected'),
+  getConnectionStatusMqtt: jest.fn(() => 'connected'),
 };
 
 global.__MqttModuleProxy = {

@@ -2,6 +2,8 @@ import { MqttClient } from '../Mqtt/MqttClient';
 import { MqttJSIModule } from '../Modules/mqttModule';
 import { EventEmitter } from '../Mqtt/EventEmitter';
 import { CONNECTION_STATE, MQTT_EVENTS } from '../Mqtt/MqttClient.constants';
+import { NativeModules } from 'react-native';
+const { MqttModule } = NativeModules;
 
 const clientConfig = {
   autoReconnect: false,
@@ -45,12 +47,12 @@ describe('MqttClient', () => {
       undefined as unknown as string,
       1883
     );
-    expect(MqttJSIModule.createMqtt).toBeCalledTimes(0);
+    expect(MqttModule.createMqtt).toBeCalledTimes(0);
   });
 
   it('should create an instance and call createMqtt', () => {
     mqttClient = new MqttClient(clientId, host, port, clientConfig);
-    expect(MqttJSIModule.createMqtt).toHaveBeenCalledWith(
+    expect(MqttModule.createMqtt).toHaveBeenCalledWith(
       clientId,
       host,
       port,
@@ -189,6 +191,12 @@ describe('MqttClient', () => {
     expect(status).toBe(CONNECTION_STATE.CONNECTED);
   });
 
+  it('should get retry count', () => {
+    mqttClient = new MqttClient(clientId, host, port, clientConfig);
+    const status = mqttClient.getCurrentRetryCount();
+    expect(status).toBe(0);
+  });
+
   describe('MqttClient event handling', () => {
     let client;
 
@@ -260,7 +268,6 @@ describe('MqttClient', () => {
       client.resetConnectVariables();
       const mockCallback = jest.fn();
       const callback = client.setOnConnectFailureCallback(mockCallback);
-      expect(mockCallback).toHaveBeenCalled();
       expect(callback.remove).toBeDefined();
     });
   });

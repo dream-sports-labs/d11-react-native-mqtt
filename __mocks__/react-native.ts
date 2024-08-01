@@ -3,6 +3,7 @@ const NativeModules = {
     installJSIModule: jest.fn((shouldReturnTrue = true) => {
       return shouldReturnTrue;
     }),
+    createMqtt: jest.fn(),
   },
 };
 
