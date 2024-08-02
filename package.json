@@ -39,7 +39,7 @@
     "android"
   ],
   "repository": "https://github.com/dream-sports-labs/d11-react-native-mqtt.git",
-  "author": "Vibhor Verma <vibhor.verma@dream11.com> (https://github.com/vibhor-d11)",
+  "author": "Dream Sports Labs <dreamsportslabs@dream11.com> (https://github.com/dream-sports-labs)",
   "license": "MIT",
   "bugs": {
     "url": "https://github.com/dream-sports-labs/d11-react-native-mqtt.git/issues"
