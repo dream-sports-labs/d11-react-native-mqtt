@@ -1,6 +1,6 @@
 {
   "name": "@d11/react-native-mqtt",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "React native support for using mqtt",
   "module": "dist/Modules/mqtt-modules.js",
   "main": "dist/index.js",
@@ -16,6 +16,7 @@
     "*.podspec",
     "!ios/build",
     "!android/build",
+    "!android/.cxx",
     "!android/gradle",
     "!android/gradlew",
     "!android/gradlew.bat",
@@ -38,7 +39,7 @@
     "android"
   ],
   "repository": "https://github.com/dream-sports-labs/d11-react-native-mqtt.git",
-  "author": "Vibhor Verma <vibhor.verma@dream11.com> (https://github.com/vibhor-d11)",
+  "author": "Dream Sports Labs <dreamsportslabs@dream11.com> (https://github.com/dream-sports-labs)",
   "license": "MIT",
   "bugs": {
     "url": "https://github.com/dream-sports-labs/d11-react-native-mqtt.git/issues"

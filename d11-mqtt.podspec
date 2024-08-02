@@ -12,7 +12,7 @@ Pod::Spec.new do |s|
   s.authors      = package["author"]
 
   s.platforms    = { :ios => "11.0" }
-  s.source       = { :git => "https://github.com/dream11/d11-mqtt.git", :tag => "#{s.version}" }
+  s.source       = { :git => "https://github.com/dream-sports-labs/d11-react-native-mqtt.git", :tag => "#{s.version}" }
 
   s.source_files = "ios/**/*.{h,m,mm,swift}"
   s.private_header_files = 'ios/MqttJSIUtils.h'
