@@ -37,7 +37,7 @@ class MqttHelper {
         if mqtt.clientID == clientId && mqtt.host == host && mqtt.port == UInt16(port) {
             emitJsiEvent(clientId + CLIENT_INITIALIZE_EVENT, ["clientInit": true])
         } else {
-            emitJsiEvent(clientId + ERROR_EVENT, ["clientInit": false, "errorMessage": "Failed to initialize MQTT client"])
+            emitJsiEvent(clientId + ERROR_EVENT, ["clientInit": false, "errorMessage": "Failed to initialize MQTT client", "errorType": "INITIALIZATION"])
         }
     }
 
@@ -131,7 +131,17 @@ extension MqttHelper: CocoaMQTT5Delegate {
     func mqtt5(_ mqtt5: CocoaMQTT5, didReceiveMessage message: CocoaMQTT5Message, id: UInt16, publishData: MqttDecodePublish?) {
         if let allSubscriptionsForTopic = subscriptionMap[message.topic] {
             for eventId in allSubscriptionsForTopic.keys {
-                emitJsiEvent(eventId, ["payload": message.string ?? "", "topic": message.topic, "qos": message.qos.rawValue])
+                var params: [String: Any] = [
+                    "payload": message.string ?? "",
+                    "topic": message.topic,
+                    "qos": message.qos.rawValue
+                ]
+                
+                if message.qos.rawValue > 0 {
+                    params["messageId"] = String(id)
+                }
+                
+                emitJsiEvent(eventId, params)
                 print("message ", message.string ?? "")
             }
         }

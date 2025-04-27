@@ -39,6 +39,7 @@ export interface MqttEventsInterface {
     payload: string;
     topic: string;
     qos: MqttQos;
+    messageId?: string;
   };
   [MQTT_EVENTS.SUBSCRIPTION_SUCCESS_EVENT]: {
     message: string;
@@ -60,6 +61,7 @@ export interface MqttEventsInterface {
     reasonCode: number;
     clientSubscribed: boolean;
     clientUnsubscribed: boolean;
+    errorType: MqttErrorType;
   };
 }
 
@@ -88,3 +90,12 @@ export type DisconnectCallback = {
     retryCount: number;
   };
 };
+
+enum MqttErrorType {
+  INITIALIZATION = 'INITIALIZATION',
+  CONNECTION = 'CONNECTION',
+  SUBSCRIPTION = 'SUBSCRIPTION',
+  UNSUBSCRIPTION = 'UNSUBSCRIPTION',
+  DISCONNECTION = 'DISCONNECTION',
+  GENERAL = 'GENERAL'
+}

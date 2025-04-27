@@ -86,6 +86,7 @@ class MqttHelper(
             val params = Arguments.createMap().apply {
               putBoolean("clientInit", false)
               putString("errorMessage", e.message.toString())
+              putString("errorType", "INITIALIZATION")
             }
             emitJsiEvent(clientId + ERROR_EVENT, params)
         }
@@ -116,6 +117,7 @@ class MqttHelper(
                   putBoolean("clientConnected", false)
                   putString("errorMessage", error.message.toString())
                   putString("errorCause", error.cause.toString())
+                  putString("errorType", "CONNECTION")
                 }
                 emitJsiEvent(clientId + ERROR_EVENT, params)
             }
@@ -164,8 +166,8 @@ class MqttHelper(
 
                 val params = Arguments.createMap().apply {
                     putString("message", subAck.reasonString.toString())
-                    putString("topic", topic) // TODO: get from mqtt client
-                    putInt("qos", qos) // TODO: get from response
+                    putString("topic", topic)
+                    putInt("qos", (MqttQos.fromCode(qos) ?: MqttQos.AT_MOST_ONCE).code)
                 }
                 emitJsiEvent(eventId + SUBSCRIBE_SUCCESS, params)
             }
@@ -174,11 +176,13 @@ class MqttHelper(
                     putString("payload", String(publish.payloadAsBytes))
                     putString("topic", publish.topic.toString())
                     putInt("qos", publish.qos.code)
+                    if (publish.qos.code > 0) {
+                        putString("messageId", publish.packetId.toString())
+                    }
                 }
                 emitJsiEvent(eventId, params)
             }
             .doOnError { error ->
-                Log.e("MQTT Subscribe", "" + error.message) // TODO: Replace with LogWrapper when available on bridge
                 val params = Arguments.createMap().apply {
                     putBoolean("clientSubscribed", false)
                     putString("errorMessage", error.message.toString())
@@ -221,6 +225,7 @@ class MqttHelper(
                     val params = Arguments.createMap().apply {
                       putBoolean("clientUnsubscribed", false)
                       putString("errorMessage", error.message.toString())
+                      putString("errorType", "UNSUBSCRIPTION")
                     }
                     emitJsiEvent(clientId + ERROR_EVENT, params)
                 }
