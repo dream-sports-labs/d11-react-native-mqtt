@@ -41,19 +41,28 @@ class MqttHelper(
             val client = Mqtt5Client.builder()
                 .identifier(clientId)
                 .addDisconnectedListener { disconnectedContext ->
-                    val connPayload = try {
-                        (disconnectedContext.cause as Mqtt5ConnAckException?)?.mqttMessage?.reasonCode?.code
+                    var errorMessage = ""
+                    var reasonCode = -1
+                    
+                    try {
+                        reasonCode = (disconnectedContext.cause as Mqtt5ConnAckException?)?.mqttMessage?.reasonCode?.code ?: -1
                     } catch (e: Exception) {
-                        null
+                        errorMessage += "ConnAck Error: ${e.message}. "
                     }
 
-                    val disconnectPayload = try {
-                        (disconnectedContext.cause as Mqtt5DisconnectException).mqttMessage.reasonCode.code
+                    try {
+                        val disconnectCode = (disconnectedContext.cause as Mqtt5DisconnectException).mqttMessage.reasonCode.code
+                        if (disconnectCode != -1) {
+                            reasonCode = disconnectCode
+                        }
                     } catch (e: Exception) {
-                        null
+                        errorMessage += "Disconnect Error: ${e.message}. "
                     }
                     val params = Arguments.createMap().apply {
-                        putInt("reasonCode", connPayload ?: disconnectPayload ?: -1)
+                        putInt("reasonCode", reasonCode)
+                        if (errorMessage.isNotEmpty()) {
+                            putString("errorMessage", errorMessage.trim())
+                        }
                     }
                     emitJsiEvent(clientId + DISCONNECTED_EVENT, params)
                 }
@@ -114,10 +123,11 @@ class MqttHelper(
             .doOnError { error ->
                 Log.e("MQTT Connect", "" + error.message + ":" + error.cause)
                 val params = Arguments.createMap().apply {
-                  putBoolean("clientConnected", false)
-                  putString("errorMessage", error.message.toString())
-                  putString("errorCause", error.cause.toString())
-                  putString("errorType", "CONNECTION")
+                    putBoolean("clientConnected", false)
+                    putString("errorMessage", error.message.toString())
+                    putString("errorCause", error.cause.toString())
+                    putString("errorType", "CONNECTION")
+                    putInt("reasonCode", -1)
                 }
                 emitJsiEvent(clientId + ERROR_EVENT, params)
             }
@@ -126,6 +136,12 @@ class MqttHelper(
                 // This is the error handler in the subscribe method.
                 // It will be called if an error occurs in the observable chain.
                 Log.e("RxJava", "Error occurred in subscribe: ${throwable.message}")
+                val params = Arguments.createMap().apply {
+                    putString("errorType", "CONNECTION")
+                    putString("errorMessage", throwable.message.toString())
+                    putInt("reasonCode", -1)
+                }
+                emitJsiEvent(clientId + ERROR_EVENT, params)
               })
 
     }
@@ -153,6 +169,12 @@ class MqttHelper(
                 // This is the error handler in the subscribe method.
                 // It will be called if an error occurs in the observable chain.
                 Log.e("RxJava", "Error occurred in subscribe: ${throwable.message}")
+                val params = Arguments.createMap().apply {
+                    putString("errorType", "DISCONNECTION")
+                    putString("errorMessage", throwable.message.toString())
+                    putInt("reasonCode", -1)
+                }
+                emitJsiEvent(clientId + ERROR_EVENT, params)
               })
     }
 
@@ -186,14 +208,24 @@ class MqttHelper(
                 val params = Arguments.createMap().apply {
                     putBoolean("clientSubscribed", false)
                     putString("errorMessage", error.message.toString())
+                    putInt("reasonCode", -1)
                 }
                 emitJsiEvent(eventId + SUBSCRIBE_FAILED, params)
+                emitJsiEvent(clientId + ERROR_EVENT, params)
             }
             .subscribe( {},
               { throwable ->
                 // This is the error handler in the subscribe method.
                 // It will be called if an error occurs in the observable chain.
                 Log.e("RxJava", "Error occurred in subscribe: ${throwable.message}")
+                val params = Arguments.createMap().apply {
+                    putString("errorType", "SUBSCRIPTION")
+                    putString("errorMessage", throwable.message.toString())
+                    putString("topic", topic)
+                    putInt("qos", qos)
+                    putInt("reasonCode", -1)
+                }
+                emitJsiEvent(clientId + ERROR_EVENT, params)
               })
 
         if (!subscriptionMap.containsKey(topic)) {
@@ -223,9 +255,11 @@ class MqttHelper(
                     // TODO: Replace with LogWrapper when available on bridge
                     Log.e("MQTT Unsubscribe", "" + error.message)
                     val params = Arguments.createMap().apply {
-                      putBoolean("clientUnsubscribed", false)
-                      putString("errorMessage", error.message.toString())
-                      putString("errorType", "UNSUBSCRIPTION")
+                        putBoolean("clientUnsubscribed", false)
+                        putString("errorMessage", error.message.toString())
+                        putString("errorType", "UNSUBSCRIPTION")
+                        putString("topic", topic)
+                        putInt("reasonCode", -1)
                     }
                     emitJsiEvent(clientId + ERROR_EVENT, params)
                 }
@@ -234,6 +268,13 @@ class MqttHelper(
                     // This is the error handler in the subscribe method.
                     // It will be called if an error occurs in the observable chain.
                     Log.e("RxJava", "Error occurred in subscribe: ${throwable.message}")
+                    val params = Arguments.createMap().apply {
+                        putString("errorType", "UNSUBSCRIPTION")
+                        putString("errorMessage", throwable.message.toString())
+                        putString("topic", topic)
+                        putInt("reasonCode", -1)
+                    }
+                    emitJsiEvent(clientId + ERROR_EVENT, params)
                   })
             subscriptionMap.remove(topic)
         }

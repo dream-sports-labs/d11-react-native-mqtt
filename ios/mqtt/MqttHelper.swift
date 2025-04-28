@@ -37,7 +37,11 @@ class MqttHelper {
         if mqtt.clientID == clientId && mqtt.host == host && mqtt.port == UInt16(port) {
             emitJsiEvent(clientId + CLIENT_INITIALIZE_EVENT, ["clientInit": true])
         } else {
-            emitJsiEvent(clientId + ERROR_EVENT, ["clientInit": false, "errorMessage": "Failed to initialize MQTT client", "errorType": "INITIALIZATION"])
+            emitJsiEvent(clientId + ERROR_EVENT, [
+                "clientInit": false,
+                "errorMessage": "Failed to initialize MQTT client",
+                "errorType": "INITIALIZATION"
+            ])
         }
     }
 
@@ -183,7 +187,21 @@ extension MqttHelper: CocoaMQTT5Delegate {
     }
 
     func mqtt5DidDisconnect(_ mqtt5: CocoaMQTT5, withError err: Error?) {
-        emitJsiEvent(clientId + DISCONNECTED_EVENT, ["reasonCode": -1])
+        var reasonCode = -1
+        var errorMessage = ""
+        
+        if let error = err {
+            errorMessage = error.localizedDescription
+            if error is CocoaMQTTError {
+                reasonCode = (error as! CocoaMQTTError).rawValue
+            }
+        }
+        
+        let params: [String: Any] = [
+            "reasonCode": reasonCode,
+            "errorMessage": errorMessage
+        ]
+        emitJsiEvent(clientId + DISCONNECTED_EVENT, params)
     }
 }
 
