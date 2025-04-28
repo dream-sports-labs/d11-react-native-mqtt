@@ -52,7 +52,7 @@ class MqttHelper(
                 .addDisconnectedListener { disconnectedContext ->
                     var errorMessage = ""
                     var reasonCode = -1
-                    
+
                     try {
                         reasonCode = (disconnectedContext.cause as Mqtt5ConnAckException?)?.mqttMessage?.reasonCode?.code ?: -1
                     } catch (e: Exception) {
@@ -208,9 +208,6 @@ class MqttHelper(
                     putString("payload", String(publish.payloadAsBytes))
                     putString("topic", publish.topic.toString())
                     putInt("qos", publish.qos.code)
-                    if (publish.qos.code > 0) {
-                        putString("messageId", publish.packetId.toString())
-                    }
                 }
                 emitJsiEvent(eventId, params)
             }
