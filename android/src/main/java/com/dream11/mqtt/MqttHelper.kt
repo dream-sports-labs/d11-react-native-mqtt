@@ -51,7 +51,7 @@ class MqttHelper(
                 .identifier(clientId)
                 .addDisconnectedListener { disconnectedContext ->
                     var errorMessage = ""
-                    var reasonCode = -1
+                    var reasonCode = DEFAULT_ERROR
 
                     try {
                         reasonCode = (disconnectedContext.cause as Mqtt5ConnAckException?)?.mqttMessage?.reasonCode?.code ?: -1
@@ -209,6 +209,8 @@ class MqttHelper(
                     putString("topic", publish.topic.toString())
                     putInt("qos", publish.qos.code)
                 }
+                Log.d("Shubham MQTT Payload ", "Testing messageID  ${publish.payload}")
+                Log.d("Shubham MQTT Publish ", "Testing messageID  ${publish}")
                 emitJsiEvent(eventId, params)
             }
             .doOnError { error ->
@@ -218,7 +220,6 @@ class MqttHelper(
                     putInt("reasonCode", SUBSCRIPTION_ERROR)
                 }
                 emitJsiEvent(eventId + SUBSCRIBE_FAILED, params)
-                emitJsiEvent(clientId + ERROR_EVENT, params)
             }
             .subscribe( {},
               { throwable ->

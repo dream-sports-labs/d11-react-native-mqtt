@@ -34,6 +34,7 @@ export interface MqttEventsInterface {
   };
   [MQTT_EVENTS.DISCONNECTED_EVENT]: {
     reasonCode: Mqtt5ReasonCode;
+    errorMessage?: string;
   };
   [MQTT_EVENTS.SUBSCRIPTION_EVENT]: {
     payload: string;
@@ -48,6 +49,7 @@ export interface MqttEventsInterface {
   };
   [MQTT_EVENTS.SUBSCRIPTION_FAILED_EVENT]: {
     errorMessage: string;
+    reasonCode: Mqtt5ReasonCode;
   };
   [MQTT_EVENTS.CLIENT_INITIALIZE_EVENT]: {
     clientInit: boolean;
