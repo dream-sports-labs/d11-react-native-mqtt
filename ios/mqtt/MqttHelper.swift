@@ -201,14 +201,11 @@ extension MqttHelper: CocoaMQTT5Delegate {
     }
 
     func mqtt5DidDisconnect(_ mqtt5: CocoaMQTT5, withError err: Error?) {
-        var reasonCode = DISCONNECTION_ERROR
+        let reasonCode = DISCONNECTION_ERROR
         var errorMessage = ""
-        
+      
         if let error = err {
             errorMessage = error.localizedDescription
-            if error is CocoaMQTTError {
-                reasonCode = (error as! CocoaMQTTError).rawValue
-            }
         }
         
         let params: [String: Any] = [
