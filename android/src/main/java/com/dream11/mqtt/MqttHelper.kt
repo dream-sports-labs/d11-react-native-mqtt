@@ -50,37 +50,36 @@ class MqttHelper(
             val client = Mqtt5Client.builder()
                 .identifier(clientId)
                 .addDisconnectedListener { disconnectedContext ->
+                    val connPayload = try {
+                        (disconnectedContext.cause as Mqtt5ConnAckException?)?.mqttMessage?.reasonCode?.code
+                    } catch (e: Exception) {
+                        null
+                    }
+
+                    val disconnectPayload = try {
+                        (disconnectedContext.cause as Mqtt5DisconnectException).mqttMessage.reasonCode.code
+                    } catch (e: Exception) {
+                        null
+                    }
+
                     var errorMessage = ""
-                    var reasonCode = DEFAULT_ERROR
-
-                    try {
-                        reasonCode = (disconnectedContext.cause as Mqtt5ConnAckException?)?.mqttMessage?.reasonCode?.code ?: -1
-                    } catch (e: Exception) {
-                        errorMessage += "ConnAck Error: ${e.message}. "
-                    }
-
-                    try {
-                        val disconnectCode = (disconnectedContext.cause as Mqtt5DisconnectException).mqttMessage.reasonCode.code
-                        if (disconnectCode != -1) {
-                            reasonCode = disconnectCode
-                        }
-                    } catch (e: Exception) {
-                        errorMessage += "Disconnect Error: ${e.message}. "
-                    }
                     val params = Arguments.createMap().apply {
-                        putInt("reasonCode", reasonCode)
-                        if (errorMessage.isNotEmpty()) {
-                            putString("errorMessage", errorMessage.trim())
+                        putInt("reasonCode", connPayload ?: disconnectPayload ?: DISCONNECTION_ERROR)
+                        errorMessage = try {
+                          disconnectedContext.cause.message ?: "Unknown error"
+                        } catch (e: Exception) {
+                          e.message.toString();
                         }
+                        putString("errorMessage", errorMessage)
                     }
-                    Log.d("MQTT DISCONNECTED_EVENT", " event fired from addDisconnectedListener")
+                    Log.d("MQTT addDisconnectedListener", "Error: ${disconnectedContext.cause}")
                     emitJsiEvent(clientId + DISCONNECTED_EVENT, params)
                 }
                 .addConnectedListener {
                     val params = Arguments.createMap().apply {
                         putInt("reasonCode", 0)
                     }
-                  Log.d("MQTT CONNECTED_EVENT", " event fired from addDisconnectedListener")
+                  Log.d("MQTT CONNECTED_EVENT", " event fired from addConnectedListener")
                     emitJsiEvent(clientId + CONNECTED_EVENT, params)
                 }
                 .serverHost(host)
