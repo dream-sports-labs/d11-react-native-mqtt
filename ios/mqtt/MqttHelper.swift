@@ -144,19 +144,8 @@ extension MqttHelper: CocoaMQTT5Delegate {
 
     func mqtt5(_ mqtt5: CocoaMQTT5, didReceiveMessage message: CocoaMQTT5Message, id: UInt16, publishData: MqttDecodePublish?) {
         if let allSubscriptionsForTopic = subscriptionMap[message.topic] {
-            for eventId in allSubscriptionsForTopic.keys {
-                var params: [String: Any] = [
-                    "payload": message.string ?? "",
-                    "topic": message.topic,
-                    "qos": message.qos.rawValue
-                ]
-                
-                if message.qos.rawValue > 0 {
-                    params["messageId"] = String(id)
-                }
-                
-                emitJsiEvent(eventId, params)
-                print("message ", message.string ?? "")
+            for eventId in allSubscriptionsForTopic.keys {                
+                emitJsiEvent(eventId, ["payload": message.string ?? "", "topic": message.topic, "qos": message.qos.rawValue])
             }
         }
     }
@@ -165,9 +154,9 @@ extension MqttHelper: CocoaMQTT5Delegate {
         // Handle successful subscriptions
         for (topic, qos) in success {
             if let topic = topic as? String, let qosValue = qos as? NSNumber, let allSubscriptionsForTopic = subscriptionMap[topic] {
-                for eventId in allSubscriptionsForTopic.keys {
-                    emitJsiEvent(eventId + SUBSCRIBE_SUCCESS, ["message": "", "qos": qosValue.intValue, "topic": topic]) // TODO: get actual error message
-                }
+              for eventId in allSubscriptionsForTopic.keys {
+                emitJsiEvent(eventId + SUBSCRIBE_SUCCESS, ["message": "", "qos": qosValue.intValue, "topic": topic]) // TODO: get actual error message
+              }
             }
         }
     

@@ -17,16 +17,14 @@ export const createMqttClient = (
   const eventName = config.clientId + MQTT_EVENTS.CLIENT_INITIALIZE_EVENT;
 
   return new Promise<MqttClient | undefined>((resolve) => {
-    let client: MqttClient = new MqttClient(
-      config.clientId,
-      config.host,
-      config.port,
-      config.options
-    );
-
+    console.log(' ::MQTT Library: Adding listener for eventName', eventName);
     const listener = eventEmitter.addListener(
       eventName,
       (ack: MqttEventsInterface[MQTT_EVENTS.CLIENT_INITIALIZE_EVENT]) => {
+        console.log(
+          ' ::MQTT Library: Client initialized event received',
+          ack.clientInit
+        );
         if (ack.clientInit) {
           resolve(client);
         } else {
@@ -34,6 +32,13 @@ export const createMqttClient = (
         }
         listener.remove();
       }
+    );
+
+    let client: MqttClient = new MqttClient(
+      config.clientId,
+      config.host,
+      config.port,
+      config.options
     );
   });
 };

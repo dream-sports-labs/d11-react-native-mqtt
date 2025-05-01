@@ -40,7 +40,6 @@ export interface MqttEventsInterface {
     payload: string;
     topic: string;
     qos: MqttQos;
-    messageId?: string;
   };
   [MQTT_EVENTS.SUBSCRIPTION_SUCCESS_EVENT]: {
     message: string;

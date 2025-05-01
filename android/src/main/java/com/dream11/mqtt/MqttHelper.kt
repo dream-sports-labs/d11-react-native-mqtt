@@ -201,17 +201,19 @@ class MqttHelper(
                     putString("topic", publish.topic.toString())
                     putInt("qos", publish.qos.code)
                 }
-                Log.d("Shubham MQTT Payload ", "Testing messageID  ${publish.payload}")
-                Log.d("Shubham MQTT Publish ", "Testing messageID  ${publish}")
                 emitJsiEvent(eventId, params)
             }
             .doOnError { error ->
-                val params = Arguments.createMap().apply {
-                    putBoolean("clientSubscribed", false)
-                    putString("errorMessage", error.message.toString())
-                    putInt("reasonCode", SUBSCRIPTION_ERROR)
-                }
-                emitJsiEvent(eventId + SUBSCRIBE_FAILED, params)
+              Log.e(
+                "MQTT Subscribe",
+                "" + error.message
+              ) // TODO: Replace with LogWrapper when available on bridge
+              val params = Arguments.createMap().apply {
+                putBoolean("clientSubscribed", false)
+                putString("errorMessage", error.message.toString())
+                putInt("reasonCode", SUBSCRIPTION_ERROR)
+              }
+              emitJsiEvent(eventId + SUBSCRIBE_FAILED, params)
             }
             .subscribe( {},
               { throwable ->
