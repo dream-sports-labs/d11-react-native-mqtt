@@ -199,8 +199,7 @@ class MqttHelper(
                 emitJsiEvent(eventId, params)
             }
             .doOnError { error ->
-              Log.e("MQTT Subscribe", "" + error.message) // TODO: Replace with 
-LogWrapper when available on bridge
+              Log.e("MQTT Subscribe", "" + error.message) // TODO: Replace with LogWrapper when available on bridge
               val params = Arguments.createMap().apply {
                 putBoolean("clientSubscribed", false)
                 putString("errorMessage", error.message.toString())
@@ -248,6 +247,7 @@ LogWrapper when available on bridge
                         putString("topic", topic)
                         putInt("reasonCode", UNSUBSCRIPTION_ERROR)
                     }
+                    emitJsiEvent(clientId + ERROR_EVENT, params)
                 }
                 .subscribe( {},
                   { throwable ->

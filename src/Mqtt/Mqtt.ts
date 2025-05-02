@@ -17,14 +17,9 @@ export const createMqttClient = (
   const eventName = config.clientId + MQTT_EVENTS.CLIENT_INITIALIZE_EVENT;
 
   return new Promise<MqttClient | undefined>((resolve) => {
-    console.log(' ::MQTT Library: Adding listener for eventName', eventName);
     const listener = eventEmitter.addListener(
       eventName,
       (ack: MqttEventsInterface[MQTT_EVENTS.CLIENT_INITIALIZE_EVENT]) => {
-        console.log(
-          ' ::MQTT Library: Client initialized event received',
-          ack.clientInit
-        );
         if (ack.clientInit) {
           resolve(client);
         } else {
