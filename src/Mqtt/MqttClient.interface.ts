@@ -1,4 +1,9 @@
-import { Mqtt5ReasonCode, MQTT_EVENTS, MqttQos } from './MqttClient.constants';
+import {
+  Mqtt5ReasonCode,
+  MQTT_EVENTS,
+  MqttErrorType,
+  MqttQos,
+} from './MqttClient.constants';
 
 export type MqttConnect = {
   keepAlive?: number;
@@ -91,12 +96,3 @@ export type DisconnectCallback = {
     retryCount: number;
   };
 };
-
-enum MqttErrorType {
-  INITIALIZATION = 'INITIALIZATION',
-  CONNECTION = 'CONNECTION',
-  SUBSCRIPTION = 'SUBSCRIPTION',
-  UNSUBSCRIPTION = 'UNSUBSCRIPTION',
-  DISCONNECTION = 'DISCONNECTION',
-  GENERAL = 'GENERAL',
-}
