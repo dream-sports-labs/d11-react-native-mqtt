@@ -144,8 +144,9 @@ extension MqttHelper: CocoaMQTT5Delegate {
 
     func mqtt5(_ mqtt5: CocoaMQTT5, didReceiveMessage message: CocoaMQTT5Message, id: UInt16, publishData: MqttDecodePublish?) {
         if let allSubscriptionsForTopic = subscriptionMap[message.topic] {
-            for eventId in allSubscriptionsForTopic.keys {                
+            for eventId in allSubscriptionsForTopic.keys {
                 emitJsiEvent(eventId, ["payload": message.string ?? "", "topic": message.topic, "qos": message.qos.rawValue])
+                print("message ", message.string ?? "")
             }
         }
     }

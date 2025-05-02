@@ -407,9 +407,6 @@ export class MqttClient {
     ) => void
   ) {
     const listener = this.onDisconnectInterceptor((ack) => {
-      console.log(
-        `::MQTT Library: DISCONNECTED_EVENT event received in setOnDisconnectCallback and connectionStatus is ${this.getConnectionStatus()} if connectionStatus is not connecting then calling the callback with disconnectType and retryCount`
-      );
       if (this.getConnectionStatus() !== CONNECTION_STATE.CONNECTING) {
         callback(ack, {
           ...this.options,
@@ -468,9 +465,6 @@ export class MqttClient {
   ) {
     const listener = this.onDisconnectInterceptor(
       (ack: MqttEventsInterface[MQTT_EVENTS.DISCONNECTED_EVENT]) => {
-        console.log(
-          `::MQTT Library: DISCONNECTED_EVENT event received in setOnConnectFailureCallback and connectionStatus is ${this.getConnectionStatus()} if connectionStatus is connecting then calling the callback`
-        );
         if (this.getConnectionStatus() === CONNECTION_STATE.CONNECTING) {
           callback(ack);
         }
