@@ -9,7 +9,9 @@ jest.mock('../Mqtt/EventEmitter.ts', () => {
   const mEventEmitter = {
     getInstance: jest.fn(),
     addListener: jest.fn((_, callback) => {
-      callback({ clientInit: true });
+      setTimeout(() => {
+        callback({ clientInit: true });
+      }, 0);
       return { remove };
     }),
     removeAllListeners: jest.fn(),

@@ -27,6 +27,15 @@ class MqttHelper {
     private let CONNECTING = "connecting"
     private let DISCONNECTED = "disconnected"
 
+    // Error Reason Codes
+    private let DEFAULT_ERROR = -1
+    private let CONNECTION_ERROR = -2
+    private let DISCONNECTION_ERROR = -3
+    private let SUBSCRIPTION_ERROR = -4
+    private let UNSUBSCRIPTION_ERROR = -5
+    private let INITIALIZATION_ERROR = -6
+    private let RX_CHAIN_ERROR = -7
+
     init(_ clientId: String, host: String, port: Int, enableSslConfig: Bool, emitJsiEvent: @escaping (_ event: String, _ params: [String : Any]?) -> Void) {
         self.emitJsiEvent = emitJsiEvent
         self.clientId = clientId
@@ -37,7 +46,12 @@ class MqttHelper {
         if mqtt.clientID == clientId && mqtt.host == host && mqtt.port == UInt16(port) {
             emitJsiEvent(clientId + CLIENT_INITIALIZE_EVENT, ["clientInit": true])
         } else {
-            emitJsiEvent(clientId + ERROR_EVENT, ["clientInit": false, "errorMessage": "Failed to initialize MQTT client"])
+            emitJsiEvent(clientId + ERROR_EVENT, [
+                "clientInit": false,
+                "errorMessage": "Failed to initialize MQTT client",
+                "errorType": "INITIALIZATION",
+                "reasonCode": INITIALIZATION_ERROR
+            ])
         }
     }
 
@@ -141,9 +155,9 @@ extension MqttHelper: CocoaMQTT5Delegate {
         // Handle successful subscriptions
         for (topic, qos) in success {
             if let topic = topic as? String, let qosValue = qos as? NSNumber, let allSubscriptionsForTopic = subscriptionMap[topic] {
-                for eventId in allSubscriptionsForTopic.keys {
-                    emitJsiEvent(eventId + SUBSCRIBE_SUCCESS, ["message": "", "qos": qosValue.intValue, "topic": topic]) // TODO: get actual error message
-                }
+              for eventId in allSubscriptionsForTopic.keys {
+                emitJsiEvent(eventId + SUBSCRIBE_SUCCESS, ["message": "", "qos": qosValue.intValue, "topic": topic]) // TODO: get actual error message
+              }
             }
         }
     
@@ -151,7 +165,11 @@ extension MqttHelper: CocoaMQTT5Delegate {
         for topic in failed {
             if let allSubscriptionsForTopic = subscriptionMap[topic] {
                 for eventId in allSubscriptionsForTopic.keys {
-                    emitJsiEvent(eventId + SUBSCRIBE_FAILED, ["errorMessage": ""]) // TODO: get actual error message
+                    emitJsiEvent(eventId + SUBSCRIBE_FAILED, [
+                        "errorMessage": "Failed to subscribe to topic: \(topic)",
+                        "topic": topic,
+                        "reasonCode": SUBSCRIPTION_ERROR
+                    ])
                 }
             }
         }
@@ -173,7 +191,18 @@ extension MqttHelper: CocoaMQTT5Delegate {
     }
 
     func mqtt5DidDisconnect(_ mqtt5: CocoaMQTT5, withError err: Error?) {
-        emitJsiEvent(clientId + DISCONNECTED_EVENT, ["reasonCode": -1])
+        let reasonCode = DISCONNECTION_ERROR
+        var errorMessage = ""
+      
+        if let error = err {
+            errorMessage = error.localizedDescription
+        }
+        
+        let params: [String: Any] = [
+            "reasonCode": reasonCode,
+            "errorMessage": errorMessage
+        ]
+        emitJsiEvent(clientId + DISCONNECTED_EVENT, params)
     }
 }
 

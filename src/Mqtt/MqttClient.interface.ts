@@ -1,4 +1,9 @@
-import { Mqtt5ReasonCode, MQTT_EVENTS, MqttQos } from './MqttClient.constants';
+import {
+  Mqtt5ReasonCode,
+  MQTT_EVENTS,
+  MqttErrorType,
+  MqttQos,
+} from './MqttClient.constants';
 
 export type MqttConnect = {
   keepAlive?: number;
@@ -34,6 +39,7 @@ export interface MqttEventsInterface {
   };
   [MQTT_EVENTS.DISCONNECTED_EVENT]: {
     reasonCode: Mqtt5ReasonCode;
+    errorMessage?: string;
   };
   [MQTT_EVENTS.SUBSCRIPTION_EVENT]: {
     payload: string;
@@ -47,6 +53,7 @@ export interface MqttEventsInterface {
   };
   [MQTT_EVENTS.SUBSCRIPTION_FAILED_EVENT]: {
     errorMessage: string;
+    reasonCode: Mqtt5ReasonCode;
   };
   [MQTT_EVENTS.CLIENT_INITIALIZE_EVENT]: {
     clientInit: boolean;
@@ -60,6 +67,7 @@ export interface MqttEventsInterface {
     reasonCode: number;
     clientSubscribed: boolean;
     clientUnsubscribed: boolean;
+    errorType: MqttErrorType;
   };
 }
 

@@ -263,7 +263,7 @@ MQTT_EVENTS {
 - `setOnConnectFailureCallback`: Sets a callback for handling connection failure events.
 
 ```tsx
-type onConnectFailureCallback = (mqtt5ReasonCode: Mqtt5ReasonCode) => void
+type onConnectFailureCallback = (ack: MqttEventsInterface[MQTT_EVENTS.CONNECTED_EVENT]) => void
 
 client.setOnConnectFailureCallback(onConnectFailureCallback)
 
@@ -273,6 +273,12 @@ Mqtt5ReasonCode {
   BAD_AUTHENTICATION_METHOD = 140,
   NORMAL_DISCONNECTION = 0,
   DEFAULT = -1,
+  CONNECTION_ERROR = -2,
+  DISCONNECTION_ERROR = -3,
+  SUBSCRIPTION_ERROR = -4,
+  UNSUBSCRIPTION_ERROR = -5,
+  INITIALIZATION_ERROR = -6,
+  RX_CHAIN_ERROR = -7
 }
 ```
 
@@ -282,12 +288,21 @@ Mqtt5ReasonCode {
 type onErrorCallback = (ack: MqttEventsInterface[MQTT_EVENTS.ERROR_EVENT]) => void
 
 client.setOnErrorCallback(onErrorCallback)
+
+export enum MqttErrorType {
+  INITIALIZATION = 'INITIALIZATION',
+  CONNECTION = 'CONNECTION',
+  SUBSCRIPTION = 'SUBSCRIPTION',
+  UNSUBSCRIPTION = 'UNSUBSCRIPTION',
+  DISCONNECTION = 'DISCONNECTION',
+  GENERAL = 'GENERAL',
+}
 ```
 
 - `setOnDisconnectCallback`: Sets a callback for handling client disconnect events.
 
 ```tsx
-type onDisconnectCallback = (mqtt5ReasonCode: DisconnectCallback['mqtt5ReasonCode'],
+type onDisconnectCallback = (ack: MqttEventsInterface[MQTT_EVENTS.DISCONNECTED_EVENT],
 options: DisconnectCallback['options']) => void
 
 client.setOnDisconnectCallback(onDisconnectCallback)
@@ -322,7 +337,7 @@ client.setOnReconnectInterceptor(reconnectInterceptor)
 - `setOnConnectFailureCallback`: Sets a callback for handling connection failure events.
 
 ```tsx
-type onConnectFailureCallback = (mqtt5ReasonCode: Mqtt5ReasonCode) => void
+type onConnectFailureCallback = (ack: MqttEventsInterface[MQTT_EVENTS.CONNECTED_EVENT]) => void
 
 client.setOnConnectFailureCallback(onConnectFailureCallback)
 ```

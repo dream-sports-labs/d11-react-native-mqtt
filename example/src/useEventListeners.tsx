@@ -8,8 +8,8 @@ export const useEventListeners = (mqttClient: MqttClient | undefined) => {
     });
 
     const onConnectFailureListener = mqttClient?.setOnConnectFailureCallback(
-      (reasonCode) => {
-        console.log('Client Connection Failure Listner', reasonCode);
+      (ack) => {
+        console.log('Client Connection Failure Listner', ack);
       }
     );
 
