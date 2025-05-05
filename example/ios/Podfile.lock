@@ -4,7 +4,7 @@ PODS:
     - CocoaMQTT/Core (= 2.1.5)
   - CocoaMQTT/Core (2.1.5):
     - MqttCocoaAsyncSocket (~> 1.0.8)
-  - d11-mqtt (0.0.3):
+  - d11-mqtt (0.0.4):
     - CocoaMQTT (= 2.1.5)
     - RCT-Folly (= 2021.07.22.00)
     - React-Core
@@ -576,7 +576,7 @@ EXTERNAL SOURCES:
 SPEC CHECKSUMS:
   boost: 7dcd2de282d72e344012f7d6564d024930a6a440
   CocoaMQTT: af1bd1e42f81b9f4f9dcf3a8990c42b7c00989b9
-  d11-mqtt: 100b5ad192e70401c0e36be180cd642973951f22
+  d11-mqtt: 6d722620217aab13efc7d24180f2b35b84237171
   DoubleConversion: 5189b271737e1565bdce30deb4a08d647e3f5f54
   FBLazyVector: dc178b8748748c036ef9493a5d59d6d1f91a36ce
   FBReactNativeSpec: d0aaae78e93c89dc2d691d8052a4d2aeb1b461ee
