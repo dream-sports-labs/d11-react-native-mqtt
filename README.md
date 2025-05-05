@@ -337,7 +337,7 @@ client.setOnReconnectInterceptor(reconnectInterceptor)
 - `setOnConnectFailureCallback`: Sets a callback for handling connection failure events.
 
 ```tsx
-type onConnectFailureCallback = (mqtt5ReasonCode: Mqtt5ReasonCode) => void
+type onConnectFailureCallback = (ack: MqttEventsInterface[MQTT_EVENTS.CONNECTED_EVENT]) => void
 
 client.setOnConnectFailureCallback(onConnectFailureCallback)
 ```
