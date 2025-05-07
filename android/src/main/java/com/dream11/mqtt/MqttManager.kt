@@ -1,7 +1,6 @@
 package com.d11.rn.mqtt
 
 import android.util.Log
-import com.facebook.react.bridge.WritableMap
 import java.util.concurrent.Callable
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
@@ -16,7 +15,7 @@ object MqttManager {
         host: String,
         port: Int,
         enableSslConfig:Boolean,
-        emitJsiEvent: (eventId: String, payload: WritableMap) -> Unit
+        emitJsiEvent: (eventId: String, payload: HashMap<String, Any>) -> Unit
     ) {
         executor.submit {
             if (!clientMap.containsKey(clientId)) {

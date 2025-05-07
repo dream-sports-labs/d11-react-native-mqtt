@@ -1,8 +1,6 @@
 package com.d11.rn.mqtt
 
 import android.util.Log
-import com.facebook.react.bridge.Arguments
-import com.facebook.react.bridge.WritableMap
 import com.hivemq.client.mqtt.MqttClientState
 import com.hivemq.client.mqtt.datatypes.MqttQos
 import com.hivemq.client.mqtt.mqtt5.Mqtt5Client
@@ -17,7 +15,7 @@ class MqttHelper(
     host: String,
     port: Int,
     enableSslConfig: Boolean,
-    private val emitJsiEvent: (eventId: String, payload: WritableMap) -> Unit
+    private val emitJsiEvent: (eventId: String, payload: HashMap<String, Any>) -> Unit
 ) {
     private lateinit var mqtt: Mqtt5RxClient
     private val subscriptionMap: HashMap<String, HashMap<String, Subscription>> = HashMap()
@@ -75,8 +73,8 @@ class MqttHelper(
                     emitJsiEvent(clientId + DISCONNECTED_EVENT, params)
                 }
                 .addConnectedListener {
-                    val params = Arguments.createMap().apply {
-                        putInt("reasonCode", 0)
+                    val params = HashMap<String, Any>().apply {
+                        put("reasonCode", 0)
                     }
                     emitJsiEvent(clientId + CONNECTED_EVENT, params)
                 }
@@ -93,8 +91,8 @@ class MqttHelper(
           }
 
           if (this::mqtt.isInitialized) {
-            val params = Arguments.createMap().apply {
-              putBoolean("clientInit", true)
+            val params = HashMap<String, Any>().apply {
+              put("clientInit", true)
             }
             emitJsiEvent(clientId + CLIENT_INITIALIZE_EVENT, params)
           }
@@ -191,10 +189,10 @@ class MqttHelper(
                 emitJsiEvent(eventId + SUBSCRIBE_SUCCESS, params)
             }
             .doOnNext { publish ->
-                val params = Arguments.createMap().apply {
-                    putString("payload", String(publish.payloadAsBytes))
-                    putString("topic", publish.topic.toString())
-                    putInt("qos", publish.qos.code)
+                val params = HashMap<String, Any>().apply {
+                    put("payload", String(publish.payloadAsBytes))
+                    put("topic", publish.topic.toString())
+                    put("qos", publish.qos.code)
                 }
                 emitJsiEvent(eventId, params)
             }
