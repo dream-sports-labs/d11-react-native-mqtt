@@ -1,6 +1,7 @@
 package com.d11.rn.mqtt
 
 import android.util.Log
+import com.d11.rn.mqtt.helpers.MapUtils
 import com.facebook.react.bridge.Promise
 import com.facebook.react.bridge.ReactApplicationContext
 import com.facebook.react.bridge.ReactContextBaseJavaModule
@@ -64,10 +65,10 @@ class MqttModuleImpl(reactContext: ReactApplicationContext?) :
         }
   }
 
-    private fun emitJsiEvent(eventId: String, payload: WritableMap) {
+    private fun emitJsiEvent(eventId: String, payload: HashMap<String, Any>) {
         reactApplicationContext
             .getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter::class.java)
-            .emit(eventId, payload)
+            .emit(eventId, MapUtils.toWritableMap(payload))
     }
 
     override fun removeMqtt(clientId: String) {
