@@ -122,7 +122,7 @@ const mqttConfig: MqttConfig =  {
   "clientId": "mqttx_0121",
   "cleanSession": true,
   "host": "dummy.mqttx.com",
-  "jitter": 1, 
+  "jitter": 1,
   "keepAlive": 60,
   "maxBackoffTime": 60,
   "port": 8883,
@@ -185,7 +185,7 @@ export default function App() {
         color={'green'}
         onPress={connectMqtt}
       />
-      
+
       <Button
         title="Subscribe MQTT"
         color={'green'}
