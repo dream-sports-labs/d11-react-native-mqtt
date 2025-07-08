@@ -1,5 +1,7 @@
 # d11-react-native-mqtt
 
+[![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/dream-sports-labs/d11-react-native-mqtt)
+
 Message Queuing Telemetry Transport (MQTT) is a lightweight, efficient, and reliable messaging protocol designed for low-bandwidth, high-latency, or unreliable networks.
 
 MQTT operates on a publish/subscribe pattern, facilitating the decoupling of message senders (publishers) from message receivers (subscribers). This is achieved through the utilization of a central component known as a message broker, which orchestrates communication between publishers and subscribers.
